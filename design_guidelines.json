@@ -1,0 +1,171 @@
+{
+  "design_system": {
+    "name": "DragonFit OS",
+    "theme": "dark",
+    "description": "A high-performance, dark-mode gym tracker with neon green accents. Aesthetic: 'Matrix' meets 'Gymshark'.",
+    "typography": {
+      "font_family": {
+        "heading": "Barlow Condensed, sans-serif",
+        "body": "Manrope, sans-serif",
+        "mono": "JetBrains Mono, monospace"
+      },
+      "google_fonts_import": "https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap",
+      "scale": {
+        "h1": "text-4xl md:text-6xl font-bold tracking-tight uppercase",
+        "h2": "text-3xl md:text-4xl font-bold tracking-tight uppercase",
+        "h3": "text-2xl md:text-3xl font-semibold tracking-tight",
+        "body": "text-base md:text-lg leading-relaxed",
+        "small": "text-sm font-medium tracking-wide text-muted-foreground"
+      }
+    },
+    "colors": {
+      "palette": {
+        "background": "#09090b",
+        "foreground": "#fafafa",
+        "card": "#18181b",
+        "card_foreground": "#fafafa",
+        "popover": "#18181b",
+        "popover_foreground": "#fafafa",
+        "primary": "#22c55e",
+        "primary_foreground": "#000000",
+        "secondary": "#27272a",
+        "secondary_foreground": "#fafafa",
+        "muted": "#27272a",
+        "muted_foreground": "#a1a1aa",
+        "accent": "#22c55e",
+        "accent_foreground": "#000000",
+        "destructive": "#ef4444",
+        "destructive_foreground": "#fafafa",
+        "border": "#27272a",
+        "input": "#27272a",
+        "ring": "#22c55e"
+      },
+      "custom_tokens": {
+        "neon-green": "#22c55e",
+        "dragon-black": "#050505",
+        "glass-black": "rgba(9, 9, 11, 0.7)"
+      }
+    },
+    "visual_enhancers": {
+      "radius": "0.5rem",
+      "shadows": {
+        "neon": "0 0 20px -5px rgba(34, 197, 94, 0.3)",
+        "card": "0 1px 3px 0 rgba(0, 0, 0, 0.5), 0 1px 2px -1px rgba(0, 0, 0, 0.5)"
+      },
+      "borders": {
+        "subtle": "1px solid #27272a",
+        "highlight": "1px solid rgba(34, 197, 94, 0.5)"
+      },
+      "gradients": {
+        "hero": "radial-gradient(circle at center, rgba(34,197,94,0.15) 0%, rgba(9,9,11,0) 70%)",
+        "card-hover": "linear-gradient(180deg, rgba(39,39,42,0) 0%, rgba(34,197,94,0.05) 100%)"
+      }
+    },
+    "layout": {
+      "container": "max-w-md mx-auto md:max-w-2xl lg:max-w-4xl px-4 md:px-6",
+      "grid_dashboard": "grid grid-cols-1 md:grid-cols-2 gap-4",
+      "spacing": {
+        "section": "py-8 md:py-12",
+        "element": "mb-4"
+      }
+    },
+    "components": {
+      "Button": {
+        "default": "bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-wider rounded-full shadow-[0_0_15px_rgba(34,197,94,0.4)] transition-all hover:scale-105 active:scale-95",
+        "outline": "border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground font-bold uppercase tracking-wider rounded-full bg-transparent"
+      },
+      "Card": {
+        "base": "bg-card text-card-foreground border-border shadow-sm rounded-xl overflow-hidden relative group",
+        "hover_effect": "hover:border-primary/50 transition-colors duration-300"
+      },
+      "Input": {
+        "base": "bg-secondary/50 border-transparent focus:border-primary focus:ring-1 focus:ring-primary/50 text-lg font-medium placeholder:text-muted-foreground/50 rounded-lg h-12"
+      },
+      "Navigation": {
+        "bottom_bar": "fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t border-border h-16 flex items-center justify-around z-50 pb-safe"
+      }
+    },
+    "motion": {
+      "transitions": "transition-all duration-200 ease-out",
+      "animations": {
+        "fade_in": "animate-in fade-in duration-500",
+        "slide_up": "animate-in slide-in-from-bottom-4 duration-500",
+        "pulse_slow": "animate-pulse duration-[3000ms]"
+      }
+    },
+    "accessibility": {
+      "contrast_check": "Ensure neon green text is only used on very dark backgrounds. Use white for main body text.",
+      "focus_states": "Visible green ring offset-2 ring-2 ring-primary",
+      "touch_targets": "Minimum 44px for all interactive elements (mobile-first)"
+    }
+  },
+  "assets": {
+    "images": {
+      "logo_placeholder": {
+        "url": "https://images.unsplash.com/photo-1739055547916-da69f34c0e04?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "DragonFit Logo - Green Dragon on Black",
+        "category": "branding"
+      },
+      "hero_background": {
+        "url": "https://images.unsplash.com/photo-1709315969349-1a43dea3efdc?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Dark Gym with Neon Green Lighting",
+        "category": "hero"
+      },
+      "workout_placeholder": {
+        "url": "https://images.unsplash.com/photo-1712992031203-45538d32ab43?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Leg Press Machine",
+        "category": "content"
+      },
+      "user_avatar_placeholder": {
+        "url": "https://images.unsplash.com/photo-1614091245074-bbf4d04a3c32?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "User Profile",
+        "category": "user"
+      }
+    },
+    "icons": {
+      "library": "lucide-react",
+      "style": "Stroke width 2px, rounded corners",
+      "recommended": [
+        "Dumbbell",
+        "Activity",
+        "Calendar",
+        "User",
+        "TrendingUp",
+        "Plus",
+        "Save",
+        "LogOut"
+      ]
+    }
+  },
+  "tech_stack": {
+    "frontend": "React (Vite) + Tailwind CSS + Shadcn/UI",
+    "backend": "FastAPI + MongoDB",
+    "charts": "Recharts",
+    "icons": "lucide-react",
+    "animations": "framer-motion"
+  },
+  "instructions_to_main_agent": [
+    "1. INITIAL SETUP: Initialize a React project with Vite if not present. Install Tailwind CSS and Shadcn/UI.",
+    "2. THEME CONFIG: Update 'tailwind.config.js' with the colors and fonts defined in 'design_system'. Add the Google Fonts link to 'index.html'.",
+    "3. LAYOUT: Create a 'Layout' component that handles the mobile-first structure (Bottom Navigation for mobile, Sidebar for desktop if needed, but prioritize mobile).",
+    "4. COMPONENTS: Use Shadcn/UI components but OVERRIDE the default styles with the 'custom_tokens' and 'visual_enhancers' defined here. Specifically, ensure Cards have the dark background and subtle borders.",
+    "5. PAGES: Implement the pages listed in the problem statement (Landing, Dashboard, Workout View, etc.). Use the 'hero_background' for the Landing page.",
+    "6. PWA: Ensure the manifest.json is configured for a standalone experience (display: standalone, theme_color: #09090b).",
+    "7. DATA-TESTID: Add 'data-testid' to all interactive elements (buttons, inputs, links) as 'page-element-action' (e.g., 'login-submit-button').",
+    "8. MOCKING: If backend is not ready, mock API calls with local state or context.",
+    "9. CRITICAL: Do NOT use gradients for text. Keep text solid White or Light Grey for readability. Use gradients only for backgrounds or borders."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur) for the Bottom Navigation.",
+    "You MUST NOT apply universal transition. Eg: 'transition: all'. This results in breaking transforms.",
+    "You MUST NOT center align the app container. This disrupts the human natural reading flow of text.",
+    "Always use modern button styles like pill-shaped, or sharp button with interaction animations & color relevant to the app style.",
+    "NEVER: use AI assistant Emoji characters like 🤖🧠 etc for icons.",
+    "Every interaction needs micro-animations - hover states, transitions, parallax effects.",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+    "Main agent relies on these image URLs. Missing categories = main agent will use placeholder text which is FORBIDDEN."
+  ]
+}
