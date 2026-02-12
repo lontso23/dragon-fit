@@ -15,6 +15,28 @@ const AuthContext = createContext(null);
 
 const useAuth = () => useContext(AuthContext);
 
+// Helper para llamadas autenticadas
+const apiFetch = async (endpoint, options = {}) => {
+  const token = localStorage.getItem('token');
+
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {}),
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    ...options,
+    headers,
+  });
+
+  return response;
+};
+
+
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,20 +46,28 @@ const AuthProvider = ({ children }) => {
   }, []);
 
   const checkAuth = async () => {
-    try {
-      const response = await fetch(`${API_URL}/api/auth/me`, {
-        credentials: 'include'
-      });
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error);
-    } finally {
-      setLoading(false);
+  const token = localStorage.getItem('token');
+  if (!token) {
+    setLoading(false);
+    return;
+  }
+
+  try {
+    const response = await apiFetch('/api/auth/me');
+
+    if (response.ok) {
+      const userData = await response.json();
+      setUser(userData);
+    } else {
+      localStorage.removeItem('token');
     }
-  };
+  } catch (error) {
+    console.error('Auth check failed:', error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const login = (userData, token) => {
     setUser(userData);
@@ -47,17 +77,10 @@ const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    try {
-      await fetch(`${API_URL}/api/auth/logout`, {
-        method: 'POST',
-        credentials: 'include'
-      });
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-    setUser(null);
     localStorage.removeItem('token');
+    setUser(null);
   };
+
 
   return (
     <AuthContext.Provider value={{ user, loading, login, logout, checkAuth }}>
@@ -103,10 +126,9 @@ const AuthCallback = () => {
       if (sessionIdMatch) {
         const sessionId = sessionIdMatch[1];
         try {
-          const response = await fetch(`${API_URL}/api/auth/session`, {
+          const response = await apiFetch(`${API_URL}/api/auth/session`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
             body: JSON.stringify({ session_id: sessionId })
           });
 
@@ -155,12 +177,11 @@ const LoginPage = () => {
         ? { email, password }
         : { email, password, name };
 
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      const response = await apiFetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
       });
+
 
       const data = await response.json();
 
@@ -289,9 +310,10 @@ const DashboardPage = () => {
   const fetchData = async () => {
     try {
       const [workoutsRes, statsRes] = await Promise.all([
-        fetch(`${API_URL}/api/workouts`, { credentials: 'include' }),
-        fetch(`${API_URL}/api/stats`, { credentials: 'include' })
+        apiFetch('/api/workouts'),
+        apiFetch('/api/stats')
       ]);
+
 
       if (workoutsRes.ok) setWorkouts(await workoutsRes.json());
       if (statsRes.ok) setStats(await statsRes.json());
@@ -447,12 +469,11 @@ const CreateWorkoutModal = ({ onClose, onCreated }) => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/api/workouts`, {
+      const response = await apiFetch('/api/workouts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ name, description, days })
       });
+
 
       if (response.ok) {
         onCreated();
@@ -605,8 +626,8 @@ const WorkoutDetailPage = () => {
   const fetchWorkout = async () => {
     try {
       const [workoutRes, sessionsRes] = await Promise.all([
-        fetch(`${API_URL}/api/workouts/${workoutId}`, { credentials: 'include' }),
-        fetch(`${API_URL}/api/sessions?workout_id=${workoutId}`, { credentials: 'include' })
+        apiFetch(`${API_URL}/api/workouts/${workoutId}`, {}),
+        apiFetch(`${API_URL}/api/sessions?workout_id=${workoutId}`, {})
       ]);
 
       if (workoutRes.ok) setWorkout(await workoutRes.json());
@@ -622,10 +643,10 @@ const WorkoutDetailPage = () => {
     if (!window.confirm('¿Eliminar esta rutina?')) return;
 
     try {
-      const response = await fetch(`${API_URL}/api/workouts/${workoutId}`, {
-        method: 'DELETE',
-        credentials: 'include'
+      const response = await apiFetch(`/api/workouts/${workoutId}`, {
+        method: 'DELETE'
       });
+
 
       if (response.ok) {
         navigate('/dashboard');
@@ -637,8 +658,7 @@ const WorkoutDetailPage = () => {
 
   const handleExport = async (format) => {
     try {
-      const response = await fetch(`${API_URL}/api/export/${format}/${workoutId}`, {
-        credentials: 'include'
+      const response = await apiFetch(`${API_URL}/api/export/${format}/${workoutId}`, {
       });
 
       if (response.ok) {
@@ -835,16 +855,15 @@ const LogSessionModal = ({ workout, dayIndex, onClose, onSaved }) => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/sessions`, {
+      const response = await apiFetch('/api/sessions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({
           workout_id: workout.workout_id,
           day_index: dayIndex,
           exercises
         })
       });
+
 
       if (response.ok) {
         onSaved();
@@ -960,12 +979,12 @@ const EditWorkoutModal = ({ workout, onClose, onSaved }) => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/workouts/${workout.workout_id}`, {
+      const response = await apiFetch(`${API_URL}/api/workouts/${workout.workout_id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ name, description, days })
       });
+
 
       if (response.ok) {
         onSaved();
@@ -1097,7 +1116,8 @@ const ProgressPage = () => {
 
   const fetchProgress = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/progress`, { credentials: 'include' });
+      const response = await apiFetch(`${API_URL}/api/progress`, {});
+
       if (response.ok) {
         setProgress(await response.json());
       }
@@ -1205,7 +1225,7 @@ const CalendarPage = () => {
 
   const fetchSessions = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/sessions`, { credentials: 'include' });
+      const response = await apiFetch(`${API_URL}/api/sessions`, { });
       if (response.ok) {
         setSessions(await response.json());
       }
