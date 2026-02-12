@@ -25,11 +25,7 @@ app = FastAPI(title="DragonFit API")
 # CORS
 app.add_middleware(
     CORSMiddleware,
-<<<<<<< HEAD:backend/server.py
-    allow_origins=["http://localhost:3000", "https://ce23b8c3-bd9b-4daf-95c2-08321f1ab582.preview.emergentagent.com"],
-=======
     allow_origins=["*"],
->>>>>>> 4a3adb2 (Fix folders):backend/app/server.py
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
