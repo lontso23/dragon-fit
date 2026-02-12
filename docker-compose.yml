@@ -17,9 +17,9 @@ services:
     ports:
       - "8001:8001"
     environment:
-      - MONGO_URL=mongodb://mongodb:27017
+      - MONGO_URL=mongodb+srv://lontso_admin:LucaDigrasi34@dragon-fit.epxh8rd.mongodb.net/?appName=dragon-fit
       - DB_NAME=dragonfit
-      - JWT_SECRET=${JWT_SECRET:-dragonfit_secret_2025}
+      - JWT_SECRET=${JWT_SECRET:-2f5f3a7abb14b2854ee447cdfbc04292a4c7ea70a7d2aaf2fa3f96597a1b5226}
     depends_on:
       - mongodb
 
@@ -30,7 +30,7 @@ services:
     ports:
       - "3000:80"
     environment:
-      - REACT_APP_BACKEND_URL=${BACKEND_URL:-http://localhost:8001}
+      - REACT_APP_BACKEND_URL=${BACKEND_URL:-https://dragon-fit.vercel.app}
     depends_on:
       - backend
 
