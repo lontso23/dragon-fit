@@ -22,10 +22,13 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
 app = FastAPI(title="DragonFit API")
 
+origins = [
+    "https://dragon-fit-frontend.vercel.app",
+]
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
