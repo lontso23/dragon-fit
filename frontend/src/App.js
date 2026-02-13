@@ -25,12 +25,10 @@ const apiFetch = async (endpoint, options = {}) => {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await apiFetch(`${API_URL}${endpoint}`, {
+  return fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
   });
-
-  return response;
 };
 
 
@@ -48,19 +46,20 @@ const AuthProvider = ({ children }) => {
   }, []);
 
   const checkAuth = async () => {
-    try {
-      const response = await apiFetch(`${API_URL}/api/auth/me`, {
-      });
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error);
-    } finally {
-      setLoading(false);
+  try {
+    const response = await apiFetch("/api/auth/me");
+
+    if (response.ok) {
+      const userData = await response.json();
+      setUser(userData);
     }
-  };
+  } catch (error) {
+    console.error("Auth check failed:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const login = (userData, token) => {
     setUser(userData);
