@@ -7,7 +7,6 @@ import {
   FileSpreadsheet, FileText, Play
 } from 'lucide-react';
 import './App.css';
-import { useParams } from 'react-router-dom';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://dragon-fit.vercel.app';
 
@@ -1470,11 +1469,26 @@ const BottomNav = () => {
 };
 
 // useParams hook for workout detail
-/*const useParams = () => {
+const useParams = () => {
   const location = useLocation();
-  const match = location.pathname.match(/\/workout\/([^/]+)/);
-  return { workoutId: match ? match[1] : null };
-};*/
+  const path = location.pathname;
+
+  // Buscar workoutId
+  const workoutMatch = path.match(/\/workout\/([^/]+)/);
+  if (workoutMatch) {
+    return { workoutId: workoutMatch[1] };
+  }
+
+  // Buscar sessionId
+  const sessionMatch = path.match(/\/session\/([^/]+)/);
+  if (sessionMatch) {
+    return { sessionId: sessionMatch[1] };
+  }
+
+  // Ninguno encontrado
+  return {};
+};
+
 
 // Main App Router
 const AppRouter = () => {
