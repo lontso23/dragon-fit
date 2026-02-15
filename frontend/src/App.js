@@ -892,7 +892,7 @@ const SessionDetailPage = () => {
 
             {/* Mini tabla de ejercicios */}
             <div className="bg-gray-800 rounded-xl shadow-md overflow-hidden">
-              <table className="w-full table-auto border-collapse border border-gray-700">
+              <table className="w-full table-fixed border-collapse border border-gray-700">
                 <thead className="bg-gray-700 text-gray-200 text-left text-sm uppercase">
                   <tr>
                     <th className="px-4 py-2 w-2/5">Ejercicio</th>
@@ -904,7 +904,10 @@ const SessionDetailPage = () => {
                 <tbody className="bg-gray-800 divide-y divide-gray-700">
                   {session.exercises.map((exercise, index) => (
                     <tr key={index} className="hover:bg-gray-700 transition-colors">
-                      <td className="px-4 py-2 font-medium break-words">{exercise.exercise_name}</td>
+                      {/* Nombre del ejercicio con wrap seguro */}
+                      <td className="px-4 py-2 font-medium break-words" style={{ wordBreak: 'break-word', whiteSpace: 'normal' }}>
+                        {exercise.exercise_name}
+                      </td>
                       <td className="px-4 py-2 text-right text-[#22c55e] font-semibold">{exercise.weight}</td>
                       <td className="px-4 py-2 text-right">{exercise.reps}</td>
                       <td className="px-4 py-2 text-center text-gray-400">{session.date}</td>
