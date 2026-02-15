@@ -786,7 +786,11 @@ const WorkoutDetailPage = () => {
             Sesiones Recientes
           </h3>
           {sessions.slice(0, 5).map((session) => (
-            <div key={session.session_id} className="card mb-2" style={{ padding: '12px', cursor: 'pointer' }} onClick={() => navigate(`/session/${session.session_id}`)}>
+            <div key={session.session_id} className="card mb-2" style={{ padding: '12px', cursor: 'pointer' }} 
+onClick={() =>{
+                console.log('Clic en sesión:', session.session_id); // <- aquí
+navigate(`/session/${session.session_id}`);
+              }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <p style={{ fontWeight: '600', color: 'var(--foreground)' }}>{session.day_name}</p>
