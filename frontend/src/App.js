@@ -883,39 +883,28 @@ const SessionDetailPage = () => {
           </div>
         ) : (
           <div className="grid gap-6">
-            {/* Tarjeta de la sesión */}
+            {/* Cabecera de la sesión */}
             <div className="bg-gray-800 rounded-xl shadow-xl p-6">
-              {/* Cabecera de la sesión */}
-              <div className="mb-4">
-                <h1 className="text-2xl font-bold text-[#22c55e]">{session.day_name}</h1>
-                <p className="text-sm text-gray-400">{session.date}</p>
-                <h2 className="text-xl font-semibold mt-1">{session.workout_name}</h2>
-              </div>
-
-              {/* Tabla de ejercicios */}
-              <div className="overflow-x-auto">
-                <table className="w-full border border-gray-700 rounded-lg text-left">
-                  <thead className="bg-gray-700 text-gray-200 uppercase text-xs tracking-wider">
-                    <tr>
-                      <th className="px-4 py-2 text-left">Ejercicio</th>
-                      <th className="px-4 py-2 text-right">Peso (kg)</th>
-                      <th className="px-4 py-2 text-right">Reps</th>
-                      <th className="px-4 py-2 text-center">Fecha</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-gray-800 divide-y divide-gray-700">
-                    {session.exercises.map((exercise, index) => (
-                      <tr key={index} className="hover:bg-gray-700 transition-colors rounded-md">
-                        <td className="px-4 py-2 font-medium">{exercise.exercise_name}</td>
-                        <td className="px-4 py-2 text-right text-[#22c55e] font-semibold">{exercise.weight}</td>
-                        <td className="px-4 py-2 text-right">{exercise.reps}</td>
-                        <td className="px-4 py-2 text-center text-gray-400">{session.date}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <h1 className="text-2xl font-bold text-[#22c55e]">{session.day_name}</h1>
+              <p className="text-sm text-gray-400">{session.date}</p>
+              <h2 className="text-xl font-semibold mt-1">{session.workout_name}</h2>
             </div>
+
+            {/* Ejercicios en tarjetas individuales */}
+            {session.exercises.map((exercise, index) => (
+              <div
+                key={index}
+                className="bg-gray-800 rounded-xl shadow-md p-4 border border-gray-700 hover:border-[#22c55e] transition-colors"
+              >
+                <div className="grid grid-cols-4 gap-4 text-sm md:text-base items-center">
+                  <div className="font-medium text-white">{exercise.exercise_name}</div>
+                  <div className="text-right text-[#22c55e] font-semibold">{exercise.weight}</div>
+                  <div className="text-right">{exercise.reps}</div>
+                  <div className="text-center text-gray-400">{session.date}</div>
+                </div>
+                <div className="border-t border-gray-700 mt-2"></div>
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -1503,7 +1492,9 @@ const CalendarPage = () => {
               })}
             </h3>
             {sessionsByDate[date].map((session) => (
-              <div key={session.session_id} className="card mb-2" data-testid={`session-${session.session_id}`}>
+              <div key={session.session_id} className="card mb-2" style={{ padding: '12px', cursor: 'pointer' }} onClick={() =>{
+                console.log('Clic en sesión:', session.session_id);
+                navigate(`/session/${session.session_id}`);}}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <p style={{ fontWeight: '600', color: 'var(--foreground)' }}>{session.workout_name}</p>
