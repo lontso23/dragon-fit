@@ -868,8 +868,8 @@ const SessionDetailPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col animate-fade-in bg-gray-900 text-white">
-      {/* Contenido principal */}
       <div className="page-container flex-1 py-6">
+        {/* Botón volver */}
         <button
           className="btn btn-sm btn-secondary mb-6"
           onClick={() => navigate(-1)}
@@ -879,7 +879,7 @@ const SessionDetailPage = () => {
 
         {session.exercises.length === 0 ? (
           <div className="empty-state py-12">
-            <h3 className="empty-title text-gray-400 text-lg">No hay ejercicios registrados</h3>
+            <h3 className="text-gray-400 text-lg">No hay ejercicios registrados</h3>
           </div>
         ) : (
           <div className="grid gap-6">
@@ -890,21 +890,21 @@ const SessionDetailPage = () => {
               <h2 className="text-xl font-semibold mt-1">{session.workout_name}</h2>
             </div>
 
-            {/* Mini tabla por cada sesión */}
-            <div className="bg-gray-800 rounded-xl shadow-md p-4 border border-gray-700">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-gray-700 text-gray-200 uppercase text-sm md:text-base">
-                    <th className="px-4 py-2">Ejercicio</th>
-                    <th className="px-4 py-2 text-right">Peso (kg)</th>
-                    <th className="px-4 py-2 text-right">Reps</th>
-                    <th className="px-4 py-2 text-center">Fecha</th>
+            {/* Mini tabla de ejercicios */}
+            <div className="bg-gray-800 rounded-xl shadow-md overflow-hidden">
+              <table className="w-full table-auto border-collapse border border-gray-700">
+                <thead className="bg-gray-700 text-gray-200 text-left text-sm uppercase">
+                  <tr>
+                    <th className="px-4 py-2 w-2/5">Ejercicio</th>
+                    <th className="px-4 py-2 w-1/6 text-right">Peso (kg)</th>
+                    <th className="px-4 py-2 w-1/6 text-right">Reps</th>
+                    <th className="px-4 py-2 w-1/6 text-center">Fecha</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="bg-gray-800 divide-y divide-gray-700">
                   {session.exercises.map((exercise, index) => (
-                    <tr key={index} className="border-t border-gray-700 hover:bg-gray-700 transition-colors">
-                      <td className="px-4 py-2 font-medium">{exercise.exercise_name}</td>
+                    <tr key={index} className="hover:bg-gray-700 transition-colors">
+                      <td className="px-4 py-2 font-medium break-words">{exercise.exercise_name}</td>
                       <td className="px-4 py-2 text-right text-[#22c55e] font-semibold">{exercise.weight}</td>
                       <td className="px-4 py-2 text-right">{exercise.reps}</td>
                       <td className="px-4 py-2 text-center text-gray-400">{session.date}</td>
