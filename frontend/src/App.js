@@ -394,11 +394,7 @@ const DashboardPage = () => {
         ))
       )}
 
-      <button 
-        className="fab"
-        onClick={() => setShowCreateModal(true)}
-        data-testid="fab-create-workout"
-      >
+      <button className="fab" onClick={() => navigate('/workout/create')}>
         <Plus size={24} />
       </button>
 
@@ -771,11 +767,7 @@ const WorkoutDetailPage = () => {
         </div>
       )}
 
-      <button 
-        className="btn btn-primary w-full mt-4"
-        onClick={() => setShowLogModal(true)}
-        data-testid="start-session-btn"
-      >
+      <button className="btn btn-primary w-full mt-4" onClick={() => navigate(`/workout/${workout.workout_id}/log`)}>
         <Play size={18} />
         Registrar Sesión
       </button>
@@ -884,33 +876,42 @@ const SessionDetailPage = () => {
       </button>
 
       <h1 className="header-title mb-2">{session.workout_name}</h1>
-      <p className="text-muted mb-6">{session.day_name} · {session.date}</p>
+
+      <p className="text-muted mb-6">
+        {session.day_name} · {session.date}
+      </p>
 
       {session.exercises.length === 0 ? (
         <div className="empty-state">
           <h3 className="empty-title">No hay ejercicios registrados</h3>
         </div>
       ) : (
-        <div className="grid gap-4">
-          {session.exercises.map((exercise, index) => (
-            <div
-              key={index}
-              className="card p-4 hover:border-green-500 transition-all cursor-pointer"
-            >
-              <div className="flex justify-between items-center mb-2">
-                <span className="font-semibold text-white">{exercise.exercise_name}</span>
-                <span className="text-[#22c55e] font-medium">{exercise.weight} kg</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>Reps: {exercise.reps}</span>
-                <span className="text-gray-400">{session.date}</span>
-              </div>
-            </div>
-          ))}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border border-gray-800 rounded-lg">
+            <thead className="bg-[#22c55e] text-black">
+              <tr>
+                <th className="px-4 py-2">Ejercicio</th>
+                <th className="px-4 py-2">Peso (kg)</th>
+                <th className="px-4 py-2">Reps</th>
+                <th className="px-4 py-2">Fecha</th>
+              </tr>
+            </thead>
+            <tbody className="bg-[#18181b] text-white divide-y divide-gray-700">
+              {session.exercises.map((exercise, index) => (
+                <tr key={index}>
+                  <td className="px-4 py-2 font-semibold">{exercise.exercise_name}</td>
+                  <td className="px-4 py-2 text-[#22c55e] font-medium">{exercise.weight}</td>
+                  <td className="px-4 py-2">{exercise.reps}</td>
+                  <td className="px-4 py-2 text-gray-400">{session.date}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
   );
+
 };
 
 // Log Session Modal
@@ -1287,6 +1288,142 @@ const ProgressPage = () => {
   );
 };
 
+const CreateWorkoutPage = () => {
+  const navigate = useNavigate();
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [days, setDays] = useState([{ day_number: 1, name: 'Día 1', exercises: [] }]);
+  const [loading, setLoading] = useState(false);
+
+  const addDay = () => setDays([...days, { day_number: days.length + 1, name: `Día ${days.length + 1}`, exercises: [] }]);
+  const addExercise = (dayIndex) => { const updated = [...days]; updated[dayIndex].exercises.push({ name: '', sets: '', notes: '' }); setDays(updated); };
+  const updateDayName = (index, newName) => { const updated = [...days]; updated[index].name = newName; setDays(updated); };
+  const updateExercise = (dayIndex, exIndex, field, value) => { const updated = [...days]; updated[dayIndex].exercises[exIndex][field] = value; setDays(updated); };
+  const removeExercise = (dayIndex, exIndex) => { const updated = [...days]; updated[dayIndex].exercises.splice(exIndex, 1); setDays(updated); };
+
+  const handleSubmit = async () => {
+    if (!name.trim()) return;
+    setLoading(true);
+    try {
+      const response = await apiFetch("/api/workouts", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, description, days })
+      });
+      if (response.ok) navigate('/dashboard');
+    } catch (error) {
+      console.error(error);
+    } finally { setLoading(false); }
+  };
+
+  return (
+    <div className="page-container animate-fade-in">
+      <div className="header">
+        <button className="btn btn-sm btn-secondary mb-2" onClick={() => navigate(-1)}>← Volver</button>
+        <h1 className="header-title">Nueva Rutina</h1>
+      </div>
+
+      {/* Formulario igual que en la modal */}
+      <div className="card">
+        <div className="input-group">
+          <label className="input-label">Nombre</label>
+          <input type="text" className="input" value={name} onChange={(e) => setName(e.target.value)} />
+        </div>
+        <div className="input-group">
+          <label className="input-label">Descripción</label>
+          <input type="text" className="input" value={description} onChange={(e) => setDescription(e.target.value)} />
+        </div>
+
+        {days.map((day, dayIndex) => (
+          <div key={dayIndex} className="card mb-4" style={{ background: 'var(--secondary)' }}>
+            <input type="text" className="input mb-2" value={day.name} onChange={(e) => updateDayName(dayIndex, e.target.value)} style={{ fontWeight: '600' }} />
+            {day.exercises.map((ex, exIndex) => (
+              <div key={exIndex} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'flex-start' }}>
+                <input type="text" className="input" placeholder="Ejercicio" value={ex.name} onChange={(e) => updateExercise(dayIndex, exIndex, 'name', e.target.value)} />
+                <input type="text" className="input" placeholder="Series" value={ex.sets} onChange={(e) => updateExercise(dayIndex, exIndex, 'sets', e.target.value)} />
+                <input type="text" className="input" placeholder="Notas" value={ex.notes} onChange={(e) => updateExercise(dayIndex, exIndex, 'notes', e.target.value)} />
+                <button className="btn btn-icon btn-danger" onClick={() => removeExercise(dayIndex, exIndex)}>X</button>
+              </div>
+            ))}
+            <button className="btn btn-sm btn-outline w-full" onClick={() => addExercise(dayIndex)}>Añadir Ejercicio</button>
+          </div>
+        ))}
+        <button className="btn btn-secondary w-full mb-4" onClick={addDay}>Añadir Día</button>
+        <button className="btn btn-primary w-full" onClick={handleSubmit} disabled={loading}>{loading ? 'Guardando...' : 'Guardar Rutina'}</button>
+      </div>
+    </div>
+  );
+};
+
+const LogSessionPage = () => {
+  const { workoutId } = useParams();
+  const navigate = useNavigate();
+  const [workout, setWorkout] = useState(null);
+  const [dayIndex, setDayIndex] = useState(0);
+  const [exercises, setExercises] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchWorkout = async () => {
+      const res = await apiFetch(`/api/workouts/${workoutId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setWorkout(data);
+        setExercises(data.days[0].exercises.map((_, i) => ({ exercise_index: i, weight: '', reps: '', notes: '' })));
+      }
+      setLoading(false);
+    };
+    fetchWorkout();
+  }, [workoutId]);
+
+  const updateExercise = (index, field, value) => {
+    const updated = [...exercises];
+    updated[index][field] = value;
+    setExercises(updated);
+  };
+
+  const handleSubmit = async () => {
+    try {
+      await apiFetch("/api/sessions", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workout_id: workout.workout_id, day_index: dayIndex, exercises })
+      });
+      navigate(`/workout/${workoutId}`);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  if (loading) return <div className="loading"><div className="loading-spinner" /></div>;
+  if (!workout) return <div className="page-container"><p>Workout no encontrado</p></div>;
+
+  const day = workout.days[dayIndex];
+
+  return (
+    <div className="page-container animate-fade-in">
+      <div className="header">
+        <button className="btn btn-sm btn-secondary mb-2" onClick={() => navigate(-1)}>← Volver</button>
+        <h1 className="header-title">{day.name}</h1>
+      </div>
+
+      {day.exercises.map((exercise, index) => (
+        <div key={index} className="card mb-4" style={{ background: 'var(--secondary)' }}>
+          <p style={{ fontWeight: '600', marginBottom: '8px', color: 'var(--foreground)' }}>{exercise.name}</p>
+          <p className="text-muted mb-2" style={{ fontSize: '12px' }}>Objetivo: {exercise.sets}</p>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <input type="text" className="input" placeholder="Peso (kg)" value={exercises[index].weight} onChange={(e) => updateExercise(index, 'weight', e.target.value)} />
+            <input type="text" className="input" placeholder="Reps" value={exercises[index].reps} onChange={(e) => updateExercise(index, 'reps', e.target.value)} />
+          </div>
+          <input type="text" className="input mt-2" placeholder="Notas" value={exercises[index].notes} onChange={(e) => updateExercise(index, 'notes', e.target.value)} />
+        </div>
+      ))}
+
+      <button className="btn btn-primary w-full" onClick={handleSubmit}>Guardar Sesión</button>
+    </div>
+  );
+};
+
 // Calendar Page
 const CalendarPage = () => {
   const [sessions, setSessions] = useState([]);
@@ -1539,6 +1676,16 @@ const AppRouter = () => {
       <Route path="/session/:sessionId" element={
         <ProtectedRoute>
           <SessionDetailPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/workout/create" element={
+        <ProtectedRoute>
+          <CreateWorkoutPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/workout/:workoutId" element={
+        <ProtectedRoute>
+          <WorkoutDetailPage />
         </ProtectedRoute>
       } />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
