@@ -356,12 +356,32 @@ async def get_sessions(workout_id: Optional[str] = None, user: User = Depends(ge
 
 @app.post("/api/sessions")
 async def create_session(session: SessionCreate, user: User = Depends(get_current_user)):
-    # Verify workout exists
+    # Verificar que el workout existe
     workout = db.workouts.find_one({"workout_id": session.workout_id, "user_id": user.user_id})
     if not workout:
         raise HTTPException(status_code=404, detail="Workout not found")
     
     session_id = f"session_{uuid.uuid4().hex[:12]}"
+
+    exercises_with_names = []
+    for e in session.exercises:
+        # Obtener el nombre del ejercicio desde el workout
+        exercise_name = "Ejercicio"
+        if (
+            "days" in workout
+            and session.day_index < len(workout["days"])
+            and e.exercise_index < len(workout["days"][session.day_index]["exercises"])
+        ):
+            exercise_name = workout["days"][session.day_index]["exercises"][e.exercise_index]["name"]
+        
+        exercises_with_names.append({
+            "exercise_index": e.exercise_index,
+            "exercise_name": exercise_name,
+            "weight": e.weight,
+            "reps": e.reps,
+            "notes": e.notes
+        })
+
     session_doc = {
         "session_id": session_id,
         "user_id": user.user_id,
@@ -370,12 +390,14 @@ async def create_session(session: SessionCreate, user: User = Depends(get_curren
         "day_index": session.day_index,
         "day_name": workout["days"][session.day_index]["name"] if session.day_index < len(workout["days"]) else "",
         "date": session.date or datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-        "exercises": [e.model_dump() for e in session.exercises],
+        "exercises": exercises_with_names,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
+
     db.training_sessions.insert_one(session_doc)
     session_doc.pop("_id", None)
     return session_doc
+
 
 @app.get("/api/sessions/{session_id}")
 async def get_session(session_id: str, user: User = Depends(get_current_user)):
@@ -398,39 +420,59 @@ async def delete_session(session_id: str, user: User = Depends(get_current_user)
 
 @app.get("/api/progress")
 async def get_progress(user: User = Depends(get_current_user)):
-    """Get progress data for charts"""
-    sessions = list(db.training_sessions.find({"user_id": user.user_id}, {"_id": 0}).sort("date", 1))
-    
-    # Group by workout and exercise
+    """Get progress data for charts including exercise names"""
+    sessions = list(
+        db.training_sessions.find({"user_id": user.user_id}, {"_id": 0}).sort("date", 1)
+    )
+
     progress_data = {}
+
     for session in sessions:
         workout_id = session["workout_id"]
+
+        # Buscar workout para nombres de ejercicios
+        workout = db.workouts.find_one(
+            {"workout_id": workout_id, "user_id": user.user_id},
+            {"_id": 0}
+        )
+
         if workout_id not in progress_data:
             progress_data[workout_id] = {
                 "workout_name": session.get("workout_name", ""),
                 "sessions_count": 0,
                 "exercises": {}
             }
+
         progress_data[workout_id]["sessions_count"] += 1
-        
+
         for ex in session.get("exercises", []):
             ex_idx = ex["exercise_index"]
+
+            # Obtener nombre del ejercicio si existe
+            exercise_name = "Ejercicio"
+            if workout and "days" in workout:
+                if session["day_index"] < len(workout["days"]):
+                    day = workout["days"][session["day_index"]]
+                    if ex_idx < len(day.get("exercises", [])):
+                        exercise_name = day["exercises"][ex_idx]["name"]
+
             if ex_idx not in progress_data[workout_id]["exercises"]:
                 progress_data[workout_id]["exercises"][ex_idx] = []
-            
-            # Parse weight (extract first number)
+
+            # Parse weight
             weight_str = ex.get("weight", "0")
             try:
                 weight = float(weight_str.replace("kg", "").replace(",", ".").split("x")[0].strip())
             except:
                 weight = 0
-            
+
             progress_data[workout_id]["exercises"][ex_idx].append({
                 "date": session["date"],
                 "weight": weight,
-                "reps": ex.get("reps", "")
+                "reps": ex.get("reps", ""),
+                "exercise_name": exercise_name
             })
-    
+
     return progress_data
 
 @app.get("/api/stats")
@@ -577,9 +619,8 @@ async def health():
 
 @app.get("/api/sessions/{session_id}")
 async def get_session(session_id: str, user=Depends(get_current_user)):
-
     # 1️⃣ Buscar sesión
-    session = db.sessions.find_one({
+    session = db.training_sessions.find_one({
         "session_id": session_id,
         "user_id": user["user_id"]
     })
@@ -587,7 +628,7 @@ async def get_session(session_id: str, user=Depends(get_current_user)):
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    # 2️⃣ Convertir ObjectId para que FastAPI pueda serializarlo
+    # 2️⃣ Convertir ObjectId a string para que FastAPI pueda serializarlo
     session["_id"] = str(session["_id"])
 
     # 3️⃣ Buscar workout para obtener nombres de ejercicios
@@ -596,18 +637,18 @@ async def get_session(session_id: str, user=Depends(get_current_user)):
         "user_id": user["user_id"]
     })
 
-    if workout:
-        # Añadir nombre de ejercicio a cada registro
-        for exercise in session["exercises"]:
-            index = exercise.get("exercise_index")
-
-            if (
-                "days" in workout
-                and session["day_index"] < len(workout["days"])
-                and index < len(workout["days"][session["day_index"]]["exercises"])
-            ):
-                exercise["exercise_name"] = workout["days"][session["day_index"]]["exercises"][index]["name"]
+    if workout and "days" in workout and session["day_index"] < len(workout["days"]):
+        day = workout["days"][session["day_index"]]
+        for exercise in session.get("exercises", []):
+            idx = exercise.get("exercise_index")
+            # Obtener el nombre del ejercicio si existe en el workout
+            if idx is not None and idx < len(day["exercises"]):
+                exercise["exercise_name"] = day["exercises"][idx]["name"]
             else:
-                exercise["exercise_name"] = "Ejercicio"
+                exercise["exercise_name"] = f"Ejercicio {idx if idx is not None else '?'}"
+    else:
+        # Si no hay workout o day_index inválido, rellenar con nombre genérico
+        for exercise in session.get("exercises", []):
+            exercise["exercise_name"] = f"Ejercicio {exercise.get('exercise_index', '?')}"
 
     return session

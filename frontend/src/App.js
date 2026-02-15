@@ -883,28 +883,32 @@ const SessionDetailPage = () => {
         ← Volver
       </button>
 
-      <h1 className="header-title">{session.workout_name}</h1>
+      <h1 className="header-title mb-2">{session.workout_name}</h1>
+      <p className="text-muted mb-6">{session.day_name} · {session.date}</p>
 
-      <p className="text-muted mb-4">
-        {session.day_name} · {session.date}
-      </p>
-
-      {session.exercises.map((exercise, index) => (
-        <div key={index} className="card mb-3">
-          <h3 style={{ fontWeight: 600 }}>
-            {exercise.exercise_name}
-          </h3>
-
-          <p>Peso: {exercise.weight} kg</p>
-          <p>Reps: {exercise.reps}</p>
-
-          {exercise.notes && (
-            <p style={{ fontStyle: "italic" }}>
-              Notas: {exercise.notes}
-            </p>
-          )}
+      {session.exercises.length === 0 ? (
+        <div className="empty-state">
+          <h3 className="empty-title">No hay ejercicios registrados</h3>
         </div>
-      ))}
+      ) : (
+        <div className="grid gap-4">
+          {session.exercises.map((exercise, index) => (
+            <div
+              key={index}
+              className="card p-4 hover:border-green-500 transition-all cursor-pointer"
+            >
+              <div className="flex justify-between items-center mb-2">
+                <span className="font-semibold text-white">{exercise.exercise_name}</span>
+                <span className="text-[#22c55e] font-medium">{exercise.weight} kg</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>Reps: {exercise.reps}</span>
+                <span className="text-gray-400">{session.date}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
