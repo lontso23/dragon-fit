@@ -6,7 +6,6 @@ import {
   Save, LogOut, ChevronRight, X, Trash2, Edit, Download,
   FileSpreadsheet, FileText, Play
 } from 'lucide-react';
-import { useParams } from "react-router-dom";
 import './App.css';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://dragon-fit.vercel.app';
