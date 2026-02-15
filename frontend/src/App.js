@@ -6,6 +6,7 @@ import {
   Save, LogOut, ChevronRight, X, Trash2, Edit, Download,
   FileSpreadsheet, FileText, Play
 } from 'lucide-react';
+import { useParams } from "react-router-dom";
 import './App.css';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://dragon-fit.vercel.app';
@@ -786,7 +787,7 @@ const WorkoutDetailPage = () => {
             Sesiones Recientes
           </h3>
           {sessions.slice(0, 5).map((session) => (
-            <div key={session.session_id} className="card mb-2" style={{ padding: '12px' }}>
+            <div key={session.session_id} className="card mb-2" style={{ padding: '12px', cursor: 'pointer' }} onClick={() => navigate(`/session/${session.session_id}`)}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <p style={{ fontWeight: '600', color: 'var(--foreground)' }}>{session.day_name}</p>
@@ -823,6 +824,85 @@ const WorkoutDetailPage = () => {
           }}
         />
       )}
+    </div>
+  );
+};
+
+const SessionDetailPage = () => {
+  const { sessionId } = useParams();
+  const navigate = useNavigate();
+
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchSession();
+  }, [sessionId]);
+
+  const fetchSession = async () => {
+    try {
+      const response = await apiFetch(`/api/sessions/${sessionId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setSession(data);
+      }
+    } catch (error) {
+      console.error("Error fetching session:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="loading">
+        <div className="loading-spinner" />
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="page-container">
+        <button className="btn btn-secondary mb-4" onClick={() => navigate(-1)}>
+          ← Volver
+        </button>
+        <p>Sesión no encontrada</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="page-container animate-fade-in">
+      <button
+        className="btn btn-sm btn-secondary mb-4"
+        onClick={() => navigate(-1)}
+      >
+        ← Volver
+      </button>
+
+      <h1 className="header-title">{session.workout_name}</h1>
+
+      <p className="text-muted mb-4">
+        {session.day_name} · {session.date}
+      </p>
+
+      {session.exercises.map((exercise, index) => (
+        <div key={index} className="card mb-3">
+          <h3 style={{ fontWeight: 600 }}>
+            {exercise.exercise_name}
+          </h3>
+
+          <p>Peso: {exercise.weight} kg</p>
+          <p>Reps: {exercise.reps}</p>
+
+          {exercise.notes && (
+            <p style={{ fontStyle: "italic" }}>
+              Notas: {exercise.notes}
+            </p>
+          )}
+        </div>
+      ))}
     </div>
   );
 };
@@ -1433,6 +1513,11 @@ const AppRouter = () => {
         <ProtectedRoute>
           <ProfilePage />
           <BottomNav />
+        </ProtectedRoute>
+      } />
+      <Route path="/session/:sessionId" element={
+        <ProtectedRoute>
+          <SessionDetailPage />
         </ProtectedRoute>
       } />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

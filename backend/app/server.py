@@ -19,6 +19,7 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from bson import ObjectId
 
 app = FastAPI(title="DragonFit API")
 
@@ -574,3 +575,39 @@ async def export_pdf(workout_id: str, user: User = Depends(get_current_user)):
 async def health():
     return {"status": "healthy", "app": "DragonFit"}
 
+@app.get("/api/sessions/{session_id}")
+async def get_session(session_id: str, user=Depends(get_current_user)):
+
+    # 1️⃣ Buscar sesión
+    session = db.sessions.find_one({
+        "session_id": session_id,
+        "user_id": user["user_id"]
+    })
+
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    # 2️⃣ Convertir ObjectId para que FastAPI pueda serializarlo
+    session["_id"] = str(session["_id"])
+
+    # 3️⃣ Buscar workout para obtener nombres de ejercicios
+    workout = db.workouts.find_one({
+        "workout_id": session["workout_id"],
+        "user_id": user["user_id"]
+    })
+
+    if workout:
+        # Añadir nombre de ejercicio a cada registro
+        for exercise in session["exercises"]:
+            index = exercise.get("exercise_index")
+
+            if (
+                "days" in workout
+                and session["day_index"] < len(workout["days"])
+                and index < len(workout["days"][session["day_index"]]["exercises"])
+            ):
+                exercise["exercise_name"] = workout["days"][session["day_index"]]["exercises"][index]["name"]
+            else:
+                exercise["exercise_name"] = "Ejercicio"
+
+    return session
