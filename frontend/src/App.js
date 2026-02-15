@@ -919,11 +919,6 @@ const SessionDetailPage = () => {
           </div>
         )}
       </div>
-
-      {/* Footer global de la app */}
-      <footer className="mt-auto">
-        <AppFooter />
-      </footer>
     </div>
   );
 };
