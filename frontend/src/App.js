@@ -867,51 +867,65 @@ const SessionDetailPage = () => {
   }
 
   return (
-    <div className="page-container animate-fade-in">
-      <button
-        className="btn btn-sm btn-secondary mb-4"
-        onClick={() => navigate(-1)}
-      >
-        ← Volver
-      </button>
+    <div className="min-h-screen flex flex-col animate-fade-in bg-gray-900 text-white">
+      {/* Contenido principal */}
+      <div className="page-container flex-1 py-6">
+        <button
+          className="btn btn-sm btn-secondary mb-6"
+          onClick={() => navigate(-1)}
+        >
+          ← Volver
+        </button>
 
-      <h1 className="header-title mb-2">{session.workout_name}</h1>
+        {session.exercises.length === 0 ? (
+          <div className="empty-state py-12">
+            <h3 className="empty-title text-gray-400 text-lg">No hay ejercicios registrados</h3>
+          </div>
+        ) : (
+          <div className="grid gap-6">
+            {/* Tarjeta de la sesión */}
+            <div className="bg-gray-800 rounded-xl shadow-xl p-6">
+              {/* Cabecera de la sesión */}
+              <div className="mb-4">
+                <h1 className="text-2xl font-bold text-[#22c55e]">{session.day_name}</h1>
+                <p className="text-sm text-gray-400">{session.date}</p>
+                <h2 className="text-xl font-semibold mt-1">{session.workout_name}</h2>
+              </div>
 
-      <p className="text-muted mb-6">
-        {session.day_name} · {session.date}
-      </p>
+              {/* Tabla de ejercicios */}
+              <div className="overflow-x-auto">
+                <table className="w-full border border-gray-700 rounded-lg text-left">
+                  <thead className="bg-gray-700 text-gray-200 uppercase text-xs tracking-wider">
+                    <tr>
+                      <th className="px-4 py-2 text-left">Ejercicio</th>
+                      <th className="px-4 py-2 text-right">Peso (kg)</th>
+                      <th className="px-4 py-2 text-right">Reps</th>
+                      <th className="px-4 py-2 text-center">Fecha</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-gray-800 divide-y divide-gray-700">
+                    {session.exercises.map((exercise, index) => (
+                      <tr key={index} className="hover:bg-gray-700 transition-colors rounded-md">
+                        <td className="px-4 py-2 font-medium">{exercise.exercise_name}</td>
+                        <td className="px-4 py-2 text-right text-[#22c55e] font-semibold">{exercise.weight}</td>
+                        <td className="px-4 py-2 text-right">{exercise.reps}</td>
+                        <td className="px-4 py-2 text-center text-gray-400">{session.date}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
-      {session.exercises.length === 0 ? (
-        <div className="empty-state">
-          <h3 className="empty-title">No hay ejercicios registrados</h3>
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border border-gray-800 rounded-lg">
-            <thead className="bg-[#22c55e] text-black">
-              <tr>
-                <th className="px-4 py-2">Ejercicio</th>
-                <th className="px-4 py-2">Peso (kg)</th>
-                <th className="px-4 py-2">Reps</th>
-                <th className="px-4 py-2">Fecha</th>
-              </tr>
-            </thead>
-            <tbody className="bg-[#18181b] text-white divide-y divide-gray-700">
-              {session.exercises.map((exercise, index) => (
-                <tr key={index}>
-                  <td className="px-4 py-2 font-semibold">{exercise.exercise_name}</td>
-                  <td className="px-4 py-2 text-[#22c55e] font-medium">{exercise.weight}</td>
-                  <td className="px-4 py-2">{exercise.reps}</td>
-                  <td className="px-4 py-2 text-gray-400">{session.date}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {/* Footer global de la app */}
+      <footer className="mt-auto">
+        <AppFooter />
+      </footer>
     </div>
   );
-
 };
 
 // Log Session Modal
@@ -1232,7 +1246,9 @@ const ProgressPage = () => {
 
           return (
             <div key={workoutId} className="mb-6">
-              <h2 style={{ fontSize: '18px', marginBottom: '16px', color: 'var(--foreground)' }}>
+              <h2
+                style={{ fontSize: '18px', marginBottom: '16px', color: 'var(--foreground)' }}
+              >
                 {data.workout_name}
                 <span className="text-muted" style={{ fontSize: '14px', marginLeft: '8px' }}>
                   ({data.sessions_count} sesiones)
@@ -1246,9 +1262,12 @@ const ProgressPage = () => {
                   peso: d.weight
                 }));
 
+                // Tomamos el nombre del primer registro del ejercicio (ya que todos los registros son del mismo ejercicio)
+                const exerciseName = exerciseData[0]?.exercise_name || `Ejercicio ${parseInt(exIdx) + 1}`;
+
                 return (
-                  <div key={exIdx} className="chart-container">
-                    <h3 className="chart-title">Ejercicio {parseInt(exIdx) + 1}</h3>
+                  <div key={exIdx} className="chart-container mb-4">
+                    <h3 className="chart-title">{exerciseName}</h3>
                     <ResponsiveContainer width="100%" height={150}>
                       <LineChart data={chartData}>
                         <XAxis 
@@ -1686,6 +1705,11 @@ const AppRouter = () => {
       <Route path="/workout/:workoutId" element={
         <ProtectedRoute>
           <WorkoutDetailPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/workout/:workoutId/log" element={
+        <ProtectedRoute>
+          <LogSessionPage />
         </ProtectedRoute>
       } />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
