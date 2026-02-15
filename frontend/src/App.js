@@ -117,7 +117,7 @@ const AuthCallback = () => {
       if (sessionIdMatch) {
         const sessionId = sessionIdMatch[1];
         try {
-          const response = await apiFetch(`${API_URL}/api/auth/session`, {
+          const response = await apiFetch("/api/auth/session", {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ session_id: sessionId })
@@ -168,7 +168,7 @@ const LoginPage = () => {
         ? { email, password }
         : { email, password, name };
 
-      const response = await apiFetch(`${API_URL}${endpoint}`, {
+      const response = await apiFetch(`${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
@@ -301,8 +301,8 @@ const DashboardPage = () => {
   const fetchData = async () => {
     try {
       const [workoutsRes, statsRes] = await Promise.all([
-        apiFetch(`${API_URL}/api/workouts`, { }),
-        apiFetch(`${API_URL}/api/stats`, { })
+        apiFetch("/api/workouts", { }),
+        apiFetch("/api/stats", { })
       ]);
 
       if (workoutsRes.ok) setWorkouts(await workoutsRes.json());
@@ -459,7 +459,7 @@ const CreateWorkoutModal = ({ onClose, onCreated }) => {
     setLoading(true);
 
     try {
-      const response = await apiFetch(`${API_URL}/api/workouts`, {
+      const response = await apiFetch("/api/workouts", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, description, days })
@@ -616,8 +616,8 @@ const WorkoutDetailPage = () => {
   const fetchWorkout = async () => {
     try {
       const [workoutRes, sessionsRes] = await Promise.all([
-        apiFetch(`${API_URL}/api/workouts/${workoutId}`, { }),
-        apiFetch(`${API_URL}/api/sessions?workout_id=${workoutId}`, { })
+        apiFetch(`/api/workouts/${workoutId}`, { }),
+        apiFetch(`/api/sessions?workout_id=${workoutId}`, { })
       ]);
 
       if (workoutRes.ok) setWorkout(await workoutRes.json());
@@ -633,7 +633,7 @@ const WorkoutDetailPage = () => {
     if (!window.confirm('¿Eliminar esta rutina?')) return;
 
     try {
-      const response = await apiFetch(`${API_URL}/api/workouts/${workoutId}`, {
+      const response = await apiFetch(`/api/workouts/${workoutId}`, {
         method: 'DELETE'
       });
 
@@ -647,7 +647,7 @@ const WorkoutDetailPage = () => {
 
   const handleExport = async (format) => {
     try {
-      const response = await apiFetch(`${API_URL}/api/export/${format}/${workoutId}`, {
+      const response = await apiFetch(`/api/export/${format}/${workoutId}`, {
       });
 
       if (response.ok) {
@@ -844,7 +844,7 @@ const LogSessionModal = ({ workout, dayIndex, onClose, onSaved }) => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const response = await apiFetch(`${API_URL}/api/sessions`, {
+      const response = await apiFetch("/api/sessions", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -968,7 +968,7 @@ const EditWorkoutModal = ({ workout, onClose, onSaved }) => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const response = await apiFetch(`${API_URL}/api/workouts/${workout.workout_id}`, {
+      const response = await apiFetch(`/api/workouts/${workout.workout_id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, description, days })
@@ -1104,7 +1104,7 @@ const ProgressPage = () => {
 
   const fetchProgress = async () => {
     try {
-      const response = await apiFetch(`${API_URL}/api/progress`, { });
+      const response = await apiFetch(`/api/progress`, { });
       if (response.ok) {
         setProgress(await response.json());
       }
@@ -1212,7 +1212,7 @@ const CalendarPage = () => {
 
   const fetchSessions = async () => {
     try {
-      const response = await apiFetch(`${API_URL}/api/sessions`, { });
+      const response = await apiFetch("/api/sessions", { });
       if (response.ok) {
         setSessions(await response.json());
       }
