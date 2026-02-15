@@ -1695,21 +1695,25 @@ const AppRouter = () => {
       <Route path="/session/:sessionId" element={
         <ProtectedRoute>
           <SessionDetailPage />
+          <BottomNav />
         </ProtectedRoute>
       } />
       <Route path="/workout/create" element={
         <ProtectedRoute>
           <CreateWorkoutPage />
+          <BottomNav />
         </ProtectedRoute>
       } />
       <Route path="/workout/:workoutId" element={
         <ProtectedRoute>
           <WorkoutDetailPage />
+          <BottomNav />
         </ProtectedRoute>
       } />
       <Route path="/workout/:workoutId/log" element={
         <ProtectedRoute>
           <LogSessionPage />
+          <BottomNav />
         </ProtectedRoute>
       } />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
