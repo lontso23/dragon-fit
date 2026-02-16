@@ -1517,8 +1517,10 @@ const EditWorkoutPage = () => {
   const { workoutId } = useParams();
   const navigate = useNavigate();
 
-  const [workout, setWorkout] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [days, setDays] = useState([]);
 
   useEffect(() => {
     fetchWorkout();
@@ -1529,7 +1531,9 @@ const EditWorkoutPage = () => {
       const response = await apiFetch(`/api/workouts/${workoutId}`);
       if (response.ok) {
         const data = await response.json();
-        setWorkout(data);
+        setName(data.name);
+        setDescription(data.description || '');
+        setDays(data.days || []);
       }
     } catch (error) {
       console.error("Error fetching workout:", error);
@@ -1538,9 +1542,50 @@ const EditWorkoutPage = () => {
     }
   };
 
-  const handleSaved = async () => {
-    // Cuando se guarde correctamente
-    navigate(`/workout/${workoutId}`);
+  const addDay = () => {
+    setDays([
+      ...days,
+      { day_number: days.length + 1, name: `Día ${days.length + 1}`, exercises: [] }
+    ]);
+  };
+
+  const updateDayName = (index, value) => {
+    const updated = [...days];
+    updated[index].name = value;
+    setDays(updated);
+  };
+
+  const addExercise = (dayIndex) => {
+    const updated = [...days];
+    updated[dayIndex].exercises.push({ name: '', sets: '', notes: '' });
+    setDays(updated);
+  };
+
+  const updateExercise = (dayIndex, exIndex, field, value) => {
+    const updated = [...days];
+    updated[dayIndex].exercises[exIndex][field] = value;
+    setDays(updated);
+  };
+
+  const removeExercise = (dayIndex, exIndex) => {
+    const updated = [...days];
+    updated[dayIndex].exercises.splice(exIndex, 1);
+    setDays(updated);
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const response = await apiFetch(`/api/workouts/${workoutId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ name, description, days })
+      });
+
+      if (response.ok) {
+        navigate(`/workout/${workoutId}`);
+      }
+    } catch (error) {
+      console.error("Error updating workout:", error);
+    }
   };
 
   if (loading) {
@@ -1551,39 +1596,110 @@ const EditWorkoutPage = () => {
     );
   }
 
-  if (!workout) {
-    return (
-      <div className="page-container">
-        <p>Rutina no encontrada</p>
-      </div>
-    );
-  }
-
   return (
     <div className="page-container animate-fade-in">
-      
-      {/* BOTÓN VOLVER */}
-      <button
-        className="btn btn-sm btn-secondary mb-4"
-        onClick={() => navigate(`/workout/${workoutId}`)}
-      >
-        ← Volver
-      </button>
 
-      <h1 className="header-title mb-4">
-        Editar Rutina
-      </h1>
+      <div className="header">
+        <button
+          className="btn btn-sm btn-secondary mb-2"
+          onClick={() => navigate(-1)}
+        >
+          ← Volver
+        </button>
+        <h1 className="header-title">Editar Rutina</h1>
+      </div>
 
-      {/* reutilizamos tu modal como componente normal */}
-      <EditWorkoutModal
-        workout={workout}
-        onClose={() => navigate(`/workout/${workoutId}`)}
-        onSaved={handleSaved}
-        isPageMode={true}   // 👈 opcional si quieres adaptar estilos
-      />
+      <div className="card">
+
+        <div className="input-group">
+          <label className="input-label">Nombre</label>
+          <input
+            type="text"
+            className="input"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </div>
+
+        <div className="input-group">
+          <label className="input-label">Descripción</label>
+          <input
+            type="text"
+            className="input"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </div>
+
+        {days.map((day, dayIndex) => (
+          <div key={dayIndex} className="card mb-4" style={{ background: 'var(--secondary)' }}>
+
+            <input
+              type="text"
+              className="input mb-2"
+              value={day.name}
+              onChange={(e) => updateDayName(dayIndex, e.target.value)}
+              style={{ fontWeight: '600' }}
+            />
+
+            {day.exercises?.map((exercise, exIndex) => (
+              <div key={exIndex} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'flex-start' }}>
+                <input
+                  type="text"
+                  className="input"
+                  placeholder="Ejercicio"
+                  value={exercise.name}
+                  onChange={(e) => updateExercise(dayIndex, exIndex, 'name', e.target.value)}
+                />
+                <input
+                  type="text"
+                  className="input"
+                  placeholder="Series"
+                  value={exercise.sets}
+                  onChange={(e) => updateExercise(dayIndex, exIndex, 'sets', e.target.value)}
+                />
+                <input
+                  type="text"
+                  className="input"
+                  placeholder="Notas"
+                  value={exercise.notes}
+                  onChange={(e) => updateExercise(dayIndex, exIndex, 'notes', e.target.value)}
+                />
+                <button
+                  className="btn btn-icon btn-danger"
+                  onClick={() => removeExercise(dayIndex, exIndex)}
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
+
+            <button
+              className="btn btn-sm btn-outline w-full"
+              onClick={() => addExercise(dayIndex)}
+            >
+              Añadir Ejercicio
+            </button>
+
+          </div>
+        ))}
+
+        <button className="btn btn-secondary w-full mb-4" onClick={addDay}>
+          Añadir Día
+        </button>
+
+        <button
+          className="btn btn-primary w-full"
+          onClick={handleSubmit}
+        >
+          Actualizar Rutina
+        </button>
+
+      </div>
     </div>
   );
 };
+
 
 // Profile Page
 const ProfilePage = () => {
@@ -1723,12 +1839,6 @@ const AppRouter = () => {
       <Route path="/dashboard" element={
         <ProtectedRoute>
           <DashboardPage />
-          <BottomNav />
-        </ProtectedRoute>
-      } />
-      <Route path="/workout/:id" element={
-        <ProtectedRoute>
-          <WorkoutDetailPage />
           <BottomNav />
         </ProtectedRoute>
       } />
