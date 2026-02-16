@@ -698,7 +698,7 @@ const WorkoutDetailPage = () => {
         <div style={{ display: 'flex', gap: '8px' }}>
           <button 
             className="btn btn-icon btn-secondary"
-            onClick={() => setShowEditModal(true)}
+            onClick={() => navigate(`/workout/${workout.workout_id}/edit`)}
             data-testid="edit-workout-btn"
           >
             <Edit size={18} />
@@ -803,17 +803,6 @@ const WorkoutDetailPage = () => {
           onClose={() => setShowLogModal(false)}
           onSaved={() => {
             setShowLogModal(false);
-            fetchWorkout();
-          }}
-        />
-      )}
-
-      {showEditModal && (
-        <EditWorkoutModal
-          workout={workout}
-          onClose={() => setShowEditModal(false)}
-          onSaved={() => {
-            setShowEditModal(false);
             fetchWorkout();
           }}
         />
@@ -1524,6 +1513,78 @@ const CalendarPage = () => {
   );
 };
 
+const EditWorkoutPage = () => {
+  const { workoutId } = useParams();
+  const navigate = useNavigate();
+
+  const [workout, setWorkout] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchWorkout();
+  }, [workoutId]);
+
+  const fetchWorkout = async () => {
+    try {
+      const response = await apiFetch(`/api/workouts/${workoutId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setWorkout(data);
+      }
+    } catch (error) {
+      console.error("Error fetching workout:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaved = async () => {
+    // Cuando se guarde correctamente
+    navigate(`/workout/${workoutId}`);
+  };
+
+  if (loading) {
+    return (
+      <div className="loading">
+        <div className="loading-spinner" />
+      </div>
+    );
+  }
+
+  if (!workout) {
+    return (
+      <div className="page-container">
+        <p>Rutina no encontrada</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="page-container animate-fade-in">
+      
+      {/* BOTÓN VOLVER */}
+      <button
+        className="btn btn-sm btn-secondary mb-4"
+        onClick={() => navigate(`/workout/${workoutId}`)}
+      >
+        ← Volver
+      </button>
+
+      <h1 className="header-title mb-4">
+        Editar Rutina
+      </h1>
+
+      {/* reutilizamos tu modal como componente normal */}
+      <EditWorkoutModal
+        workout={workout}
+        onClose={() => navigate(`/workout/${workoutId}`)}
+        onSaved={handleSaved}
+        isPageMode={true}   // 👈 opcional si quieres adaptar estilos
+      />
+    </div>
+  );
+};
+
 // Profile Page
 const ProfilePage = () => {
   const { user, logout } = useAuth();
@@ -1713,6 +1774,13 @@ const AppRouter = () => {
           <BottomNav />
         </ProtectedRoute>
       } />
+      <Route
+        path="/workout/:workoutId/edit" element={
+          <ProtectedRoute>
+            <EditWorkoutPage />
+            <BottomNav />
+          </ProtectedRoute>
+        }/>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
