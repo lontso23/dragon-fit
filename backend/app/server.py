@@ -623,39 +623,33 @@ async def get_last_session(
     day_index: int,
     user=Depends(get_current_user)
 ):
-    if not user or "user_id" not in user:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-
     try:
-        # Buscar la última sesión del usuario
-        cursor = db.sessions.find(
+        # Validación extra de seguridad
+        if not user or "user_id" not in user:
+            raise HTTPException(status_code=401, detail="Unauthorized")
+
+        last_session = await db.sessions.find_one(
             {
                 "workout_id": workout_id,
                 "day_index": day_index,
                 "user_id": user["user_id"]
+            },
+            sort=[("created_at", -1)],
+            projection={
+                "_id": 1,
+                "session_id": 1,
+                "workout_name": 1,
+                "day_name": 1,
+                "date": 1,
+                "exercises": 1
             }
-        ).sort("created_at", -1).limit(1)
+        )
 
-        sessions = list(cursor)
-        if not sessions:
-            # Si no hay sesión, devolver un objeto consistente
-            return {
-                "session_id": None,
-                "workout_name": None,
-                "day_name": None,
-                "date": None,
-                "exercises": []
-            }
+        if not last_session:
+            return {"exercises": []}
 
-        last_session = sessions[0]
-
-        # Convertir _id de la sesión a string
+        # Limpieza del _id
         last_session["_id"] = str(last_session["_id"])
-
-        # Convertir _id de los ejercicios a string (opcional, si los usarás en frontend)
-        for ex in last_session.get("exercises", []):
-            if "_id" in ex:
-                ex["_id"] = str(ex["_id"])
 
         return {
             "session_id": last_session.get("session_id"),
@@ -665,9 +659,14 @@ async def get_last_session(
             "exercises": last_session.get("exercises", [])
         }
 
+    except HTTPException:
+        # Deja pasar HTTPException como está
+        raise
     except Exception as e:
+        # Loguea el error real para depurar
         import traceback
-        print("ERROR in get_last_session:", traceback.format_exc())
+        print("ERROR in get_last_session:", repr(e))
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail="Error fetching last session")
 
 
