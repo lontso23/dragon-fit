@@ -623,28 +623,42 @@ async def get_last_session(
     day_index: int,
     user=Depends(get_current_user)
 ):
-    try:
-        # Validación extra de seguridad
-        if not user or "user_id" not in user:
-            raise HTTPException(status_code=401, detail="Unauthorized")
+    if not user or "user_id" not in user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
-        last_session = db.sessions.find_one(
+    try:
+        # Buscar la última sesión del usuario
+        cursor = db.sessions.find(
             {
                 "workout_id": workout_id,
                 "day_index": day_index,
                 "user_id": user["user_id"]
-            },
-            sort=[("created_at", -1)]
-        )
+            }
+        ).sort("created_at", -1).limit(1)
 
-        if not last_session:
-            return {"exercises": []}
+        sessions = list(cursor)
+        if not sessions:
+            # Si no hay sesión, devolver un objeto consistente
+            return {
+                "session_id": None,
+                "workout_name": None,
+                "day_name": None,
+                "date": None,
+                "exercises": []
+            }
 
-        # Limpieza del _id (muy importante en FastAPI + Mongo)
+        last_session = sessions[0]
+
+        # Convertir _id de la sesión a string
         last_session["_id"] = str(last_session["_id"])
 
+        # Convertir _id de los ejercicios a string (opcional, si los usarás en frontend)
+        for ex in last_session.get("exercises", []):
+            if "_id" in ex:
+                ex["_id"] = str(ex["_id"])
+
         return {
-            "session_id": last_session["session_id"],
+            "session_id": last_session.get("session_id"),
             "workout_name": last_session.get("workout_name"),
             "day_name": last_session.get("day_name"),
             "date": last_session.get("date"),
@@ -652,7 +666,8 @@ async def get_last_session(
         }
 
     except Exception as e:
-        print("ERROR in get_last_session:", e)
+        import traceback
+        print("ERROR in get_last_session:", traceback.format_exc())
         raise HTTPException(status_code=500, detail="Error fetching last session")
 
 
