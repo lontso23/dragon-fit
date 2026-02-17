@@ -618,24 +618,43 @@ async def health():
     return {"status": "healthy", "app": "DragonFit"}
 
 @app.get("/api/sessions/last/{workout_id}/{day_index}")
-async def get_last_session(workout_id: str, day_index: int, user=Depends(get_current_user)):
+async def get_last_session(
+    workout_id: str,
+    day_index: int,
+    user=Depends(get_current_user)
+):
+    try:
+        # Validación extra de seguridad
+        if not user or "user_id" not in user:
+            raise HTTPException(status_code=401, detail="Unauthorized")
 
-    last_session = db.sessions.find_one(
-        {
-            "workout_id": workout_id,
-            "day_index": day_index,
-            "user_id": user["user_id"]
-        },
-        sort=[("created_at", -1)]
-    )
+        last_session = db.sessions.find_one(
+            {
+                "workout_id": workout_id,
+                "day_index": day_index,
+                "user_id": user["user_id"]
+            },
+            sort=[("created_at", -1)]
+        )
 
-    if not last_session:
-        return {"exercises": []}
+        if not last_session:
+            return {"exercises": []}
 
-    return {
-        "session_id": last_session["session_id"],
-        "exercises": last_session.get("exercises", [])
-    }
+        # Limpieza del _id (muy importante en FastAPI + Mongo)
+        last_session["_id"] = str(last_session["_id"])
+
+        return {
+            "session_id": last_session["session_id"],
+            "workout_name": last_session.get("workout_name"),
+            "day_name": last_session.get("day_name"),
+            "date": last_session.get("date"),
+            "exercises": last_session.get("exercises", [])
+        }
+
+    except Exception as e:
+        print("ERROR in get_last_session:", e)
+        raise HTTPException(status_code=500, detail="Error fetching last session")
+
 
 
 @app.get("/api/sessions/{session_id}")
