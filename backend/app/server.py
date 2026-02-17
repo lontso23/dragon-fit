@@ -103,6 +103,20 @@ class SessionCreate(BaseModel):
     date: Optional[str] = None
     exercises: List[SessionLogEntry] = []
 
+class SessionExercise(BaseModel):
+    exercise_index: int
+    exercise_name: str
+    weight: str
+    reps: str
+    notes: str = ""
+
+class SessionResponse(BaseModel):
+    session_id: str
+    workout_name: Optional[str] = None
+    day_name: Optional[str] = None
+    date: Optional[str] = None
+    exercises: List[SessionExercise] = []
+
 # --- Auth Helpers ---
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -617,57 +631,46 @@ async def export_pdf(workout_id: str, user: User = Depends(get_current_user)):
 async def health():
     return {"status": "healthy", "app": "DragonFit"}
 
-@app.get("/api/sessions/last/{workout_id}/{day_index}")
-async def get_last_session(
+@app.get("/api/sessions/last/{workout_id}/{day_index}", response_model=SessionResponse)
+def get_last_session(
     workout_id: str,
     day_index: int,
-    user=Depends(get_current_user)
+    user: User = Depends(get_current_user)
 ):
-    try:
-        # Validación extra de seguridad
-        if not user or "user_id" not in user:
-            raise HTTPException(status_code=401, detail="Unauthorized")
+    if not user or not user.user_id:
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
-        last_session = await db.sessions.find_one(
-            {
-                "workout_id": workout_id,
-                "day_index": day_index,
-                "user_id": user["user_id"]
-            },
-            sort=[("created_at", -1)],
-            projection={
-                "_id": 1,
-                "session_id": 1,
-                "workout_name": 1,
-                "day_name": 1,
-                "date": 1,
-                "exercises": 1
-            }
+    # Buscar la última sesión
+    last_session_cursor = db.training_sessions.find(
+        {
+            "workout_id": workout_id,
+            "day_index": day_index,
+            "user_id": user.user_id
+        }
+    ).sort("created_at", -1).limit(1)
+
+    last_sessions = list(last_session_cursor)
+
+    if not last_sessions:
+        # Retornar vacío si no hay sesiones
+        return SessionResponse(
+            session_id="",
+            workout_name="",
+            day_name="",
+            date="",
+            exercises=[]
         )
 
-        if not last_session:
-            return {"exercises": []}
+    last_session = last_sessions[0]
+    last_session["_id"] = str(last_session["_id"])
 
-        # Limpieza del _id
-        last_session["_id"] = str(last_session["_id"])
-
-        return {
-            "session_id": last_session.get("session_id"),
-            "workout_name": last_session.get("workout_name"),
-            "day_name": last_session.get("day_name"),
-            "date": last_session.get("date"),
-            "exercises": last_session.get("exercises", [])
-        }
-
-    except HTTPException:
-        # Deja pasar HTTPException como está
-        raise
-    except Exception as e:
-        # Loguea el error real para depurar
-        import traceback
-        print("ERROR in get_last_session:", repr(e))
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail="Error fetching last session")
+    return SessionResponse(
+        session_id=last_session["session_id"],
+        workout_name=last_session.get("workout_name"),
+        day_name=last_session.get("day_name"),
+        date=last_session.get("date"),
+        exercises=last_session.get("exercises", [])
+    )
 
 
 
