@@ -1365,6 +1365,9 @@ const LogSessionPage = () => {
   const [dayIndex, setDayIndex] = useState(0);
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [lastSession, setLastSession] = useState(null);
+  const [saving, setSaving] = useState(false);
+
 
   useEffect(() => {
     const fetchWorkout = async () => {
@@ -1372,12 +1375,21 @@ const LogSessionPage = () => {
       if (res.ok) {
         const data = await res.json();
         setWorkout(data);
-        setExercises(data.days[0].exercises.map((_, i) => ({ exercise_index: i, weight: '', reps: '', notes: '' })));
+        setExercises(
+          data.days[dayIndex].exercises.map((_, i) => ({
+            exercise_index: i,
+            weight: '',
+            reps: '',
+            notes: ''
+          }))
+        );
       }
       setLoading(false);
     };
+
     fetchWorkout();
-  }, [workoutId]);
+    fetchLastSession();
+  }, [workoutId, dayIndex]);
 
   const updateExercise = (index, field, value) => {
     const updated = [...exercises];
@@ -1385,18 +1397,82 @@ const LogSessionPage = () => {
     setExercises(updated);
   };
 
-  const handleSubmit = async () => {
+  const fetchLastSession = async () => {
     try {
-      await apiFetch("/api/sessions", {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ workout_id: workout.workout_id, day_index: dayIndex, exercises })
-      });
-      navigate(`/workout/${workoutId}`);
+      const response = await apiFetch(
+        `/api/sessions/last/${workoutId}/${dayIndex}`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setLastSession(data);
+      }
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching last session:", error);
     }
   };
+
+  const getProgressData = (exerciseIndex, currentWeight, currentReps) => {
+    if (!lastSession?.exercises) return null;
+
+    const previous = lastSession.exercises.find(
+      (ex) => ex.exercise_index === exerciseIndex
+    );
+
+    if (!previous) return null;
+
+    const prevWeight = parseFloat(previous.weight || 0);
+    const prevReps = parseInt(previous.reps || 0);
+
+    const weight = parseFloat(currentWeight || 0);
+    const reps = parseInt(currentReps || 0);
+
+    const weightDiff = weight - prevWeight;
+    const repsDiff = reps - prevReps;
+
+    let color = "var(--muted)";
+    if (weightDiff > 0 || (weightDiff === 0 && repsDiff > 0)) {
+      color = "#22c55e"; // verde
+    } else if (weightDiff < 0 || (weightDiff === 0 && repsDiff < 0)) {
+      color = "#ef4444"; // rojo
+    }
+
+    return {
+      previous,
+      weightDiff,
+      repsDiff,
+      color
+    };
+  };
+
+  const handleSubmit = async () => {
+    if (saving) return; 
+
+    setSaving(true);
+
+    try {
+      const response = await apiFetch("/api/sessions", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          workout_id: workout.workout_id,
+          day_index: dayIndex,
+          exercises
+        })
+      });
+
+      if (response.ok) {
+        navigate(`/workout/${workoutId}`);
+      } else {
+        setSaving(false);
+      }
+
+    } catch (error) {
+      console.error(error);
+      setSaving(false);
+    }
+  };
+
 
   if (loading) return <div className="loading"><div className="loading-spinner" /></div>;
   if (!workout) return <div className="page-container"><p>Workout no encontrado</p></div>;
@@ -1410,19 +1486,100 @@ const LogSessionPage = () => {
         <h1 className="header-title">{day.name}</h1>
       </div>
 
-      {day.exercises.map((exercise, index) => (
-        <div key={index} className="card mb-4" style={{ background: 'var(--secondary)' }}>
-          <p style={{ fontWeight: '600', marginBottom: '8px', color: 'var(--foreground)' }}>{exercise.name}</p>
-          <p className="text-muted mb-2" style={{ fontSize: '12px' }}>Objetivo: {exercise.sets}</p>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <input type="text" className="input" placeholder="Peso (kg)" value={exercises[index].weight} onChange={(e) => updateExercise(index, 'weight', e.target.value)} />
-            <input type="text" className="input" placeholder="Reps" value={exercises[index].reps} onChange={(e) => updateExercise(index, 'reps', e.target.value)} />
-          </div>
-          <input type="text" className="input mt-2" placeholder="Notas" value={exercises[index].notes} onChange={(e) => updateExercise(index, 'notes', e.target.value)} />
-        </div>
-      ))}
+      {day.exercises.map((exercise, index) => {
+        const previous = lastSession?.exercises?.find(
+          (ex) => ex.exercise_index === index
+        );
 
-      <button className="btn btn-primary w-full" onClick={handleSubmit}>Guardar Sesión</button>
+        const current = exercises[index] || { weight: '', reps: '', notes: '' };
+
+        const progress = getProgressData(
+          index,
+          current.weight,
+          current.reps
+        );
+
+        return (
+          <div key={index} className="card mb-4" style={{ background: 'var(--secondary)' }}>
+            
+            <p style={{ fontWeight: '600', marginBottom: '8px', color: 'var(--foreground)' }}>
+              {exercise.name}
+            </p>
+
+            <p className="text-muted mb-2" style={{ fontSize: '12px' }}>
+              Objetivo: {exercise.sets}
+            </p>
+
+            {previous ? (
+              <p style={{ fontSize: '12px', color: 'var(--primary)' }}>
+                Última vez: {previous.weight}kg x {previous.reps}
+              </p>
+            ) : (
+              <p style={{ fontSize: '12px', color: 'var(--muted)' }}>
+                Primera vez 💪
+              </p>
+            )}
+
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                type="number"
+                inputMode="decimal"
+                className="input"
+                placeholder="Peso (kg)"
+                value={current.weight}
+                onChange={(e) => updateExercise(index, 'weight', e.target.value)}
+              />
+              <input
+                type="number"
+                inputMode="decimal"
+                className="input"
+                placeholder="Reps"
+                value={current.reps}
+                onChange={(e) => updateExercise(index, 'reps', e.target.value)}
+              />
+            </div>
+
+            <input
+              type="text"
+              className="input mt-2"
+              placeholder="Notas"
+              value={current.notes}
+              onChange={(e) => updateExercise(index, 'notes', e.target.value)}
+            />
+
+            {progress && current.weight && current.reps && (
+              <p
+                style={{
+                  fontSize: '12px',
+                  marginTop: '4px',
+                  color: progress.color,
+                  fontWeight: '600'
+                }}
+              >
+                {progress.weightDiff > 0 && `+${progress.weightDiff}kg `}
+                {progress.weightDiff < 0 && `${progress.weightDiff}kg `}
+                {progress.repsDiff > 0 && `+${progress.repsDiff} reps`}
+                {progress.repsDiff < 0 && `${progress.repsDiff} reps`}
+                {progress.weightDiff === 0 &&
+                  progress.repsDiff === 0 &&
+                  "Igual que la última sesión"}
+              </p>
+            )}
+
+          </div>
+        );
+      })}
+      <button
+          className="btn btn-primary w-full"
+          onClick={handleSubmit}
+          disabled={saving}
+        >
+          {saving ? (
+            <div className="loading-spinner" style={{ width: '20px', height: '20px' }} />
+          ) : (
+            "Guardar Sesión"
+          )}
+      </button>
     </div>
   );
 };

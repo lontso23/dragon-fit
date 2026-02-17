@@ -617,6 +617,27 @@ async def export_pdf(workout_id: str, user: User = Depends(get_current_user)):
 async def health():
     return {"status": "healthy", "app": "DragonFit"}
 
+@app.get("/api/sessions/last/{workout_id}/{day_index}")
+async def get_last_session(workout_id: str, day_index: int, user=Depends(get_current_user)):
+
+    last_session = db.sessions.find_one(
+        {
+            "workout_id": workout_id,
+            "day_index": day_index,
+            "user_id": user["user_id"]
+        },
+        sort=[("created_at", -1)]
+    )
+
+    if not last_session:
+        return {"exercises": []}
+
+    return {
+        "session_id": last_session["session_id"],
+        "exercises": last_session.get("exercises", [])
+    }
+
+
 @app.get("/api/sessions/{session_id}")
 async def get_session(session_id: str, user=Depends(get_current_user)):
     # 1️⃣ Buscar sesión
