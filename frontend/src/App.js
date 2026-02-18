@@ -1377,7 +1377,7 @@ const LogSessionPage = () => {
         const data = await res.json();
         setWorkout(data);
         setExercises(
-          data.days[dayIndex].exercises.map((_, i) => ({
+          data.days[parsedDayIndex].exercises.map((_, i) => ({
             exercise_index: i,
             weight: '',
             reps: '',
@@ -1390,7 +1390,7 @@ const LogSessionPage = () => {
 
     fetchWorkout();
     fetchLastSession();
-  }, [workoutId, dayIndex]);
+  }, [workoutId, parsedDayIndex]);
 
   const updateExercise = (index, field, value) => {
     const updated = [...exercises];
@@ -2036,7 +2036,7 @@ const AppRouter = () => {
           <BottomNav />
         </ProtectedRoute>
       } />
-      <Route path="/workout/:workoutId/log/:dayIndex" element={
+      <Route path="/workout/:workoutId/log/:dayIndexLog" element={
         <ProtectedRoute>
           <LogSessionPage />
           <BottomNav />
