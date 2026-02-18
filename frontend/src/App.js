@@ -767,7 +767,7 @@ const WorkoutDetailPage = () => {
         </div>
       )}
 
-      <button className="btn btn-primary w-full mt-4" onClick={() => navigate(`/workout/${workout.workout_id}/log`)}>
+      <button className="btn btn-primary w-full mt-4" onClick={() => navigate(`/workout/${workout.workout_id}/log/${activeDay}`)}>
         <Play size={18} />
         Registrar Sesión
       </button>
@@ -1359,14 +1359,15 @@ const CreateWorkoutPage = () => {
 };
 
 const LogSessionPage = () => {
-  const { workoutId } = useParams();
+  const { workoutId, dayIndex: dayIndexParam } = useParams();
   const navigate = useNavigate();
   const [workout, setWorkout] = useState(null);
-  const [dayIndex, setDayIndex] = useState(0);
+  //const [dayIndex, setDayIndex] = useState(0);
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastSession, setLastSession] = useState(null);
   const [saving, setSaving] = useState(false);
+  const parsedDayIndex = parseInt(dayIndex, 10);
 
 
   useEffect(() => {
@@ -2035,7 +2036,7 @@ const AppRouter = () => {
           <BottomNav />
         </ProtectedRoute>
       } />
-      <Route path="/workout/:workoutId/log" element={
+      <Route path="/workout/:workoutId/log:dayIndex" element={
         <ProtectedRoute>
           <LogSessionPage />
           <BottomNav />
