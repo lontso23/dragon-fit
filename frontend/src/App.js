@@ -1367,7 +1367,7 @@ const LogSessionPage = () => {
   const [loading, setLoading] = useState(true);
   const [lastSession, setLastSession] = useState(null);
   const [saving, setSaving] = useState(false);
-  const parsedDayIndex = parseInt(dayIndex, 10);
+  const parsedDayIndex = parseInt(dayIndexParam, 10);
 
 
   useEffect(() => {
@@ -1377,7 +1377,7 @@ const LogSessionPage = () => {
         const data = await res.json();
         setWorkout(data);
         setExercises(
-          data.days[dayIndex].exercises.map((_, i) => ({
+          data.days[parsedDayIndex].exercises.map((_, i) => ({
             exercise_index: i,
             weight: '',
             reps: '',
@@ -1390,7 +1390,7 @@ const LogSessionPage = () => {
 
     fetchWorkout();
     fetchLastSession();
-  }, [workoutId, dayIndex]);
+  }, [workoutId, parsedDayIndex]);
 
   const updateExercise = (index, field, value) => {
     const updated = [...exercises];
@@ -1401,7 +1401,7 @@ const LogSessionPage = () => {
   const fetchLastSession = async () => {
     try {
       const response = await apiFetch(
-        `/api/sessions/last/${workoutId}/${dayIndex}`
+        `/api/sessions/last/${workoutId}/${parsedDayIndex}`
       );
 
       if (response.ok) {
@@ -1457,7 +1457,7 @@ const LogSessionPage = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           workout_id: workout.workout_id,
-          day_index: dayIndex,
+          day_index: parsedDayIndex,
           exercises
         })
       });
@@ -1478,7 +1478,7 @@ const LogSessionPage = () => {
   if (loading) return <div className="loading"><div className="loading-spinner" /></div>;
   if (!workout) return <div className="page-container"><p>Workout no encontrado</p></div>;
 
-  const day = workout.days[dayIndex];
+  const day = workout.days[parsedDayIndex];
 
   return (
     <div className="page-container animate-fade-in">
