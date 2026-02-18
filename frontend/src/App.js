@@ -2036,7 +2036,7 @@ const AppRouter = () => {
           <BottomNav />
         </ProtectedRoute>
       } />
-      <Route path="/workout/:workoutId/log:dayIndex" element={
+      <Route path="/workout/:workoutId/log/:dayIndex" element={
         <ProtectedRoute>
           <LogSessionPage />
           <BottomNav />
