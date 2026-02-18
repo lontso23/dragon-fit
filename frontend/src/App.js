@@ -1407,7 +1407,7 @@ const LogSessionPage = () => {
   const fetchLastSession = async () => {
     try {
       const response = await apiFetch(
-        `/api/sessions/last/${workoutId}/${dayIndex}`
+        `/api/sessions/last/${workoutId}/${dayIndexLog}`
       );
 
       if (response.ok) {
