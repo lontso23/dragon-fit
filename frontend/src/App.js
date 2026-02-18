@@ -1359,8 +1359,9 @@ const CreateWorkoutPage = () => {
 };
 
 const LogSessionPage = () => {
-  const { workoutId, dayIndex } = useParams();
-  const parsedDayIndex = parseInt(dayIndex || 0);
+  const { workoutId, dayIndexLog } = useParams();
+  const [dayIndex, setDayIndex] = useState(0);
+  const parsedDayIndex = parseInt(dayIndexLog || 0);
   const navigate = useNavigate();
   const [workout, setWorkout] = useState(null);
   const [exercises, setExercises] = useState([]);
