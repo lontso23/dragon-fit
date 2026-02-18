@@ -1239,7 +1239,7 @@ const ProgressPage = () => {
                 </span>
               </h2>
 
-              {exerciseIds.slice(0, 4).map((exIdx) => {
+              {exerciseIds.slice(0, 100).map((exIdx) => {
                 const exerciseData = data.exercises[exIdx];
                 const chartData = exerciseData.map(d => ({
                   date: d.date.split('-').slice(1).join('/'),
