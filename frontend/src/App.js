@@ -767,7 +767,7 @@ const WorkoutDetailPage = () => {
         </div>
       )}
 
-      <button className="btn btn-primary w-full mt-4" onClick={() => navigate(`/workout/${workout.workout_id}/log/${activeDay}`)}>
+      <button className="btn btn-primary w-full mt-4" onClick={() => navigate(`/workout/${workout.workout_id}/log`)}>
         <Play size={18} />
         Registrar Sesión
       </button>
@@ -1359,41 +1359,24 @@ const CreateWorkoutPage = () => {
 };
 
 const LogSessionPage = () => {
-  const { workoutId, dayIndex: dayIndexParam } = useParams();
+  const { workoutId } = useParams();
   const navigate = useNavigate();
   const [workout, setWorkout] = useState(null);
-  //const [dayIndex, setDayIndex] = useState(0);
+  const [dayIndex, setDayIndex] = useState(0);
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastSession, setLastSession] = useState(null);
   const [saving, setSaving] = useState(false);
-  const parsedDayIndex = parseInt(dayIndexParam, 10);
 
 
   useEffect(() => {
-      const fetchWorkout = async () => {
-    try {
+    const fetchWorkout = async () => {
       const res = await apiFetch(`/api/workouts/${workoutId}`);
-      if (!res.ok) throw new Error("Error fetching workout");
-
-      const data = await res.json();
-      setWorkout(data);
-
-      // Asegurarse de que parsedDayIndex es válido
-      if (!data.days || !data.days[parsedDayIndex]) {
-        console.error("Day index inválido:", parsedDayIndex);
-        setExercises([]);
-        setLoading(false);
-        return;
-      }
-
-      const day = data.days[parsedDayIndex];
-      if (!day.exercises) {
-        console.error("No hay ejercicios para el día:", parsedDayIndex);
-        setExercises([]);
-      } else {
+      if (res.ok) {
+        const data = await res.json();
+        setWorkout(data);
         setExercises(
-          day.exercises.map((_, i) => ({
+          data.days[dayIndex].exercises.map((_, i) => ({
             exercise_index: i,
             weight: '',
             reps: '',
@@ -1401,19 +1384,12 @@ const LogSessionPage = () => {
           }))
         );
       }
-
       setLoading(false);
+    };
 
-    } catch (error) {
-      console.error("Error cargando workout:", error);
-      setExercises([]);
-      setLoading(false);
-    }
-  };
-
-  fetchWorkout();
-  fetchLastSession();
-}, [workoutId, parsedDayIndex]);
+    fetchWorkout();
+    fetchLastSession();
+  }, [workoutId, dayIndex]);
 
   const updateExercise = (index, field, value) => {
     const updated = [...exercises];
@@ -1424,7 +1400,7 @@ const LogSessionPage = () => {
   const fetchLastSession = async () => {
     try {
       const response = await apiFetch(
-        `/api/sessions/last/${workoutId}/${parsedDayIndex}`
+        `/api/sessions/last/${workoutId}/${dayIndex}`
       );
 
       if (response.ok) {
@@ -1480,7 +1456,7 @@ const LogSessionPage = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           workout_id: workout.workout_id,
-          day_index: parsedDayIndex,
+          day_index: dayIndex,
           exercises
         })
       });
@@ -1501,7 +1477,7 @@ const LogSessionPage = () => {
   if (loading) return <div className="loading"><div className="loading-spinner" /></div>;
   if (!workout) return <div className="page-container"><p>Workout no encontrado</p></div>;
 
-  const day = workout.days[parsedDayIndex];
+  const day = workout.days[dayIndex];
 
   return (
     <div className="page-container animate-fade-in">
@@ -2059,7 +2035,7 @@ const AppRouter = () => {
           <BottomNav />
         </ProtectedRoute>
       } />
-      <Route path="/workout/:workoutId/log/:dayIndex" element={
+      <Route path="/workout/:workoutId/log" element={
         <ProtectedRoute>
           <LogSessionPage />
           <BottomNav />
