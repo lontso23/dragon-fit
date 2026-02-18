@@ -1522,11 +1522,16 @@ const LogSessionPage = () => {
                 Última vez: {previous.weight}kg x {previous.reps}
               </p>
             ) : (
-              <p style={{ fontSize: '12px', color: 'var(--muted)' }}>
-                Primera vez 💪
-              </p>
-            )}
-
+                <p style={{
+                        fontSize: '13px',      
+                        color: 'rgba(255, 255, 255, 0.85)', 
+                        fontWeight: 500, 
+                        textShadow: '0 0 2px rgba(0,0,0,0.6)' 
+                      }}
+                    >
+                      Primera vez 💪
+                    </p>
+                )}
             <div style={{ display: 'flex', gap: '8px' }}>
               <input
                 type="number"
