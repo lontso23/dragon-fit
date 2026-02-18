@@ -1371,13 +1371,29 @@ const LogSessionPage = () => {
 
 
   useEffect(() => {
-    const fetchWorkout = async () => {
+      const fetchWorkout = async () => {
+    try {
       const res = await apiFetch(`/api/workouts/${workoutId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setWorkout(data);
+      if (!res.ok) throw new Error("Error fetching workout");
+
+      const data = await res.json();
+      setWorkout(data);
+
+      // Asegurarse de que parsedDayIndex es válido
+      if (!data.days || !data.days[parsedDayIndex]) {
+        console.error("Day index inválido:", parsedDayIndex);
+        setExercises([]);
+        setLoading(false);
+        return;
+      }
+
+      const day = data.days[parsedDayIndex];
+      if (!day.exercises) {
+        console.error("No hay ejercicios para el día:", parsedDayIndex);
+        setExercises([]);
+      } else {
         setExercises(
-          data.days[parsedDayIndex].exercises.map((_, i) => ({
+          day.exercises.map((_, i) => ({
             exercise_index: i,
             weight: '',
             reps: '',
@@ -1385,12 +1401,19 @@ const LogSessionPage = () => {
           }))
         );
       }
-      setLoading(false);
-    };
 
-    fetchWorkout();
-    fetchLastSession();
-  }, [workoutId, parsedDayIndex]);
+      setLoading(false);
+
+    } catch (error) {
+      console.error("Error cargando workout:", error);
+      setExercises([]);
+      setLoading(false);
+    }
+  };
+
+  fetchWorkout();
+  fetchLastSession();
+}, [workoutId, parsedDayIndex]);
 
   const updateExercise = (index, field, value) => {
     const updated = [...exercises];
