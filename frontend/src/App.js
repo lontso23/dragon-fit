@@ -1359,7 +1359,13 @@ const CreateWorkoutPage = () => {
 };
 
 const LogSessionPage = () => {
-  const { workoutId, dayIndexLog } = useParams();
+  //const { workoutId, dayIndexLog } = useParams();
+  const pathParts = window.location.pathname.split('/'); 
+  const workoutId = pathParts[2];
+  const dayIndexLog = pathParts[4];
+
+  console.log({ workoutId, dayIndexLog });
+
   const [dayIndex, setDayIndex] = useState(0);
   const parsedDayIndex = parseInt(dayIndexLog || 0);
   const navigate = useNavigate();
