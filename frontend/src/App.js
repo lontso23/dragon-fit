@@ -1187,10 +1187,18 @@ const EditWorkoutModal = ({ workout, onClose, onSaved }) => {
 const ProgressPage = () => {
   const [progress, setProgress] = useState({});
   const [loading, setLoading] = useState(true);
+  const [activeWorkoutId, setActiveWorkoutId] = useState(null);
 
   useEffect(() => {
     fetchProgress();
   }, []);
+
+  useEffect(() => {
+    const ids = Object.keys(progress || {});
+    if (ids.length > 0 && !activeWorkoutId) {
+      setActiveWorkoutId(ids[0]);
+    }
+  }, [progress, activeWorkoutId]);
 
   const fetchProgress = async () => {
     try {
@@ -1213,7 +1221,9 @@ const ProgressPage = () => {
     );
   }
 
-  const workoutIds = Object.keys(progress);
+  const workoutIds = Object.keys(progress).sort(
+    (a, b) => progress[b].sessions_count - progress[a].sessions_count
+  );
 
   return (
     <div className="page-container animate-fade-in" data-testid="progress-page">
@@ -1221,15 +1231,55 @@ const ProgressPage = () => {
         <h1 className="header-title">Progreso</h1>
         <TrendingUp size={32} color="var(--primary)" />
       </div>
+      {workoutIds.length > 0 && (
+        <div
+          style={{
+            display: 'flex',
+            gap: '8px',
+            overflowX: 'auto',
+            marginBottom: '16px',
+            paddingBottom: '4px'
+          }}
+        >
+          {workoutIds.map((id) => {
+            const isActive = id === activeWorkoutId;
+            const workout = progress[id];
 
-      {workoutIds.length === 0 ? (
+            return (
+              <button
+                key={id}
+                onClick={() => setActiveWorkoutId(id)}
+                style={{
+                  padding: '8px 14px',
+                  borderRadius: '999px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap',
+                  border: isActive
+                    ? '1px solid var(--primary)'
+                    : '1px solid var(--border)',
+                  background: isActive
+                    ? 'rgba(34,197,94,0.15)'
+                    : 'var(--secondary)',
+                  color: 'var(--foreground)',
+                  cursor: 'pointer'
+                }}
+              >
+                {workout.workout_name}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+
+      {workoutIds.length === 0 || !activeWorkoutId ? (
         <div className="empty-state">
           <Activity className="empty-icon" />
           <h3 className="empty-title">Sin datos</h3>
           <p className="empty-desc">Registra sesiones para ver tu progreso</p>
         </div>
-      ) : (
-        workoutIds.map((workoutId) => {
+      ) : (workoutIds.filter((id) => id === activeWorkoutId).map((workoutId) => {
           const data = progress[workoutId];
           const exerciseIds = Object.keys(data.exercises || {});
 
