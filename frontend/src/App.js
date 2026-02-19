@@ -1241,10 +1241,13 @@ const ProgressPage = () => {
 
               {exerciseIds.slice(0, 100).map((exIdx) => {
                 const exerciseData = data.exercises[exIdx];
-                const chartData = exerciseData.map(d => ({
+                const chartData = exerciseData
+                .sort((a, b) => new Date(a.date) - new Date(b.date))
+                .map(d => ({
                   date: d.date.split('-').slice(1).join('/'),
                   peso: d.weight
                 }));
+
 
                 // Tomamos el nombre del primer registro del ejercicio (ya que todos los registros son del mismo ejercicio)
                 const exerciseName = exerciseData[0]?.exercise_name || `Ejercicio ${parseInt(exIdx) + 1}`;

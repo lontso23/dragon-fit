@@ -462,6 +462,10 @@ async def get_progress(user: User = Depends(get_current_user)):
 
         for ex in session.get("exercises", []):
             ex_idx = ex["exercise_index"]
+            day_idx = session["day_index"]
+
+            exercise_key = f"{day_idx}_{ex_idx}"
+
 
             # Obtener nombre del ejercicio si existe
             exercise_name = "Ejercicio"
@@ -471,8 +475,9 @@ async def get_progress(user: User = Depends(get_current_user)):
                     if ex_idx < len(day.get("exercises", [])):
                         exercise_name = day["exercises"][ex_idx]["name"]
 
-            if ex_idx not in progress_data[workout_id]["exercises"]:
-                progress_data[workout_id]["exercises"][ex_idx] = []
+            if exercise_key not in progress_data[workout_id]["exercises"]:
+                progress_data[workout_id]["exercises"][exercise_key] = []
+
 
             # Parse weight
             weight_str = ex.get("weight", "0")
@@ -481,11 +486,12 @@ async def get_progress(user: User = Depends(get_current_user)):
             except:
                 weight = 0
 
-            progress_data[workout_id]["exercises"][ex_idx].append({
+            progress_data[workout_id]["exercises"][exercise_key].append({
                 "date": session["date"],
                 "weight": weight,
                 "reps": ex.get("reps", ""),
-                "exercise_name": exercise_name
+                "exercise_name": exercise_name,
+                "exercise_id": exercise_key
             })
 
     return progress_data
