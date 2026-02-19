@@ -1540,6 +1540,24 @@ const LogSessionPage = () => {
                       Primera vez 💪
                     </p>
                 )}
+
+            {previous?.notes && previous.notes.trim() !== "" && (
+              <div
+                style={{
+                  marginTop: '6px',
+                  padding: '8px 10px',
+                  borderRadius: '8px',
+                  background: 'rgba(34,197,94,0.08)',
+                  border: '1px solid rgba(34,197,94,0.25)',
+                  fontSize: '12px',
+                  color: 'rgba(255,255,255,0.85)',
+                  lineHeight: '1.25'
+                }}
+              >
+                <span style={{ opacity: 0.8 }}>📝 Última nota:</span>{' '}
+                <span style={{ fontStyle: 'italic' }}>{previous.notes}</span>
+              </div>
+            )}
             <div style={{ display: 'flex', gap: '8px' }}>
               <input
                 type="number"

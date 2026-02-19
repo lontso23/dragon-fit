@@ -670,6 +670,8 @@ def get_last_session(
 
     last_session = last_sessions[0]
     last_session["_id"] = str(last_session["_id"])
+    for ex in last_session.get("exercises", []):
+        ex["notes"] = ex.get("notes", "")
 
     return SessionResponse(
         session_id=last_session["session_id"],
