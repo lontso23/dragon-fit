@@ -710,9 +710,12 @@ async def get_session(session_id: str, user=Depends(get_current_user)):
                 exercise["exercise_name"] = day["exercises"][idx]["name"]
             else:
                 exercise["exercise_name"] = f"Ejercicio {idx if idx is not None else '?'}"
+
+            exercise["notes"] = exercise.get("notes", "")
     else:
         # Si no hay workout o day_index inválido, rellenar con nombre genérico
         for exercise in session.get("exercises", []):
             exercise["exercise_name"] = f"Ejercicio {exercise.get('exercise_index', '?')}"
+            exercise["notes"] = exercise.get("notes", "")
 
     return session

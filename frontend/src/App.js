@@ -895,7 +895,12 @@ const SessionDetailPage = () => {
                     <tr key={index} className="hover:bg-gray-700 transition-colors">
                       {/* Nombre del ejercicio con wrap seguro */}
                       <td className="px-4 py-2 font-medium break-words" style={{ wordBreak: 'break-word', whiteSpace: 'normal' }}>
-                        {exercise.exercise_name}
+                        <div>{exercise.exercise_name}</div> 
+                            {exercise.notes && (
+                              <div className="mt-1 text-xs text-gray-400 italic" style={{lineHeight: '1.2',display: '-webkit-box',WebkitLineClamp: 3,WebkitBoxOrient: 'vertical',overflow: 'hidden' }}>
+                                📝 {exercise.notes}
+                              </div>
+                            )}
                       </td>
                       <td className="px-4 py-2 text-right text-[#22c55e] font-semibold">{exercise.weight}</td>
                       <td className="px-4 py-2 text-right">{exercise.reps}</td>
