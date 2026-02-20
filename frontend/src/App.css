@@ -1,17 +1,24 @@
 /* DragonFit Component Styles */
-
+/* Safe Area Support */
+:root {
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+}
 /* Layout */
 .app-container {
   min-height: 100vh;
   background: var(--background);
-  padding-bottom: 80px;
+  /* Safe area */
+  padding-top: var(--safe-top);
+  padding-bottom: calc(80px + var(--safe-bottom));
 }
 
 .page-container {
   max-width: 768px;
   margin: 0 auto;
   padding: 16px;
-  padding-bottom: calc(100px + env(safe-area-inset-bottom));
+  padding-top: calc(16px + var(--safe-top));
+  padding-bottom: calc(100px + var(--safe-bottom));
 }
 
 /* Cards */
@@ -199,7 +206,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   padding: 16px 0;
+  padding-top: calc(16px + var(--safe-top));
+
   margin-bottom: 24px;
 }
 
@@ -524,7 +534,7 @@
 /* FAB */
 .fab {
   position: fixed;
-  bottom: 90px;
+  bottom: calc(90px + var(--safe-bottom));
   right: 20px;
   width: 56px;
   height: 56px;
