@@ -7,6 +7,7 @@ import {
   FileSpreadsheet, FileText, Play
 } from 'lucide-react';
 import './App.css';
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://dragon-fit.vercel.app';
 
@@ -149,39 +150,45 @@ const AuthCallback = () => {
 // Login Page
 const LoginPage = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
+
+    // ✅ Validación extra en registro
+    if (!isLogin && !acceptedPrivacy) {
+      setError("Debes aceptar la Política de Privacidad para registrarte.");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-      const body = isLogin 
-        ? { email, password }
-        : { email, password, name };
+      const endpoint = isLogin ? "/api/auth/login" : "/api/auth/register";
+      const body = isLogin ? { email, password } : { email, password, name };
 
       const response = await apiFetch(`${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || 'Error de autenticación');
+        throw new Error(data.detail || "Error de autenticación");
       }
 
       login(data.user, data.token);
-      navigate('/dashboard', { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -190,9 +197,10 @@ const LoginPage = () => {
   };
 
   const handleGoogleLogin = () => {
-    // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
-    const redirectUrl = window.location.origin + '/dashboard';
-    window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+    const redirectUrl = window.location.origin + "/dashboard";
+    window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(
+      redirectUrl
+    )}`;
   };
 
   return (
@@ -217,6 +225,7 @@ const LoginPage = () => {
               />
             </div>
           )}
+
           <div className="input-group">
             <label className="input-label">Email</label>
             <input
@@ -229,6 +238,7 @@ const LoginPage = () => {
               data-testid="email-input"
             />
           </div>
+
           <div className="input-group">
             <label className="input-label">Contraseña</label>
             <input
@@ -242,42 +252,83 @@ const LoginPage = () => {
             />
           </div>
 
+          {/* ✅ Checkbox solo en registro */}
+          {!isLogin && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "8px",
+                marginBottom: "16px",
+                fontSize: "13px",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={acceptedPrivacy}
+                onChange={(e) => setAcceptedPrivacy(e.target.checked)}
+                style={{ marginTop: "3px" }}
+                data-testid="privacy-checkbox"
+              />
+              <span style={{ color: "var(--muted-foreground)" }}>
+                He leído y acepto la{" "}
+                <Link
+                  to="/privacy"
+                  target="_blank"
+                  style={{ fontWeight: 600 }}
+                >
+                  Política de Privacidad
+                </Link>
+              </span>
+            </div>
+          )}
+
           {error && (
-            <p style={{ color: 'var(--destructive)', fontSize: '14px', marginBottom: '16px' }}>
+            <p
+              style={{
+                color: "var(--destructive)",
+                fontSize: "14px",
+                marginBottom: "16px",
+              }}
+            >
               {error}
             </p>
           )}
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="btn btn-primary w-full"
             disabled={loading}
             data-testid="submit-button"
           >
-            {loading ? 'Cargando...' : (isLogin ? 'Iniciar Sesión' : 'Registrarse')}
+            {loading
+              ? "Cargando..."
+              : isLogin
+              ? "Iniciar Sesión"
+              : "Registrarse"}
           </button>
         </form>
 
         <div className="auth-divider">o</div>
 
-        <button 
+        <button
           className="btn btn-secondary w-full"
           onClick={handleGoogleLogin}
           data-testid="google-login-button"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-          </svg>
           Continuar con Google
         </button>
 
         <p className="auth-switch">
-          {isLogin ? '¿No tienes cuenta? ' : '¿Ya tienes cuenta? '}
-          <a href="#" onClick={(e) => { e.preventDefault(); setIsLogin(!isLogin); }}>
-            {isLogin ? 'Regístrate' : 'Inicia Sesión'}
+          {isLogin ? "¿No tienes cuenta? " : "¿Ya tienes cuenta? "}
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              setIsLogin(!isLogin);
+            }}
+          >
+            {isLogin ? "Regístrate" : "Inicia Sesión"}
           </a>
         </p>
       </div>
@@ -1994,19 +2045,69 @@ const ProfilePage = () => {
       </div>
 
       <div className="card mt-4">
-        <h3 style={{ fontSize: '16px', marginBottom: '16px', color: 'var(--foreground)' }}>
-          Instalar App
-        </h3>
-        <p className="text-muted" style={{ fontSize: '14px', lineHeight: '1.6' }}>
-          Para instalar DragonFit en tu iPhone:
+      <h3
+        style={{
+          fontSize: "16px",
+          marginBottom: "16px",
+          color: "var(--foreground)",
+        }}
+      >
+        DragonFit
+      </h3>
+
+      {/* Frase principal */}
+      <p
+        style={{
+          fontSize: "18px",
+          fontWeight: "700",
+          textAlign: "center",
+          marginBottom: "12px",
+          letterSpacing: "0.5px",
+        }}
+      >
+        From Bodybuilders to Bodybuilders
+      </p>
+
+      {/* Créditos */}
+      <p
+        style={{
+          fontSize: "13px",
+          textAlign: "center",
+          color: "var(--muted-foreground)",
+          marginBottom: "20px",
+        }}
+      >
+        credits by{" "}
+        <a
+          href="https://instagram.com/mikel_lontso"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ fontWeight: "600" }}
+        >
+          @mikel_lontso
+        </a>
+      </p>
+
+      {/* Enlaces */}
+      <div style={{ textAlign: "center", fontSize: "14px" }}>
+        <p style={{ marginBottom: "8px" }}>
+          <a href="/privacy" style={{ fontWeight: "500" }}>
+            Política de privacidad
+          </a>
         </p>
-        <ol style={{ color: 'var(--muted-foreground)', fontSize: '14px', paddingLeft: '20px', marginTop: '8px' }}>
-          <li>Abre Safari en tu iPhone</li>
-          <li>Visita esta URL</li>
-          <li>Toca el botón de compartir</li>
-          <li>Selecciona "Añadir a pantalla de inicio"</li>
-        </ol>
+
+        <p>
+          <a
+            href="https://lontsofitness.netlify.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ fontWeight: "500" }}
+          >
+            Visitar web oficial
+          </a>
+        </p>
       </div>
+    </div>
 
       <button 
         className="btn btn-danger w-full mt-4"
@@ -2081,6 +2182,7 @@ const AppRouter = () => {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/privacy" element={<PrivacyPolicyPage />} />
       <Route path="/dashboard" element={
         <ProtectedRoute>
           <DashboardPage />
