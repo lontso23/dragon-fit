@@ -26,6 +26,8 @@ app = FastAPI(title="DragonFit API")
 origins = [
     "https://dragon-fit-frontend.vercel.app",
     "https://dragon-fit-training.vercel.app",
+    "capacitor://localhost",
+    "http://localhost", 
 ]
 # CORS
 app.add_middleware(
